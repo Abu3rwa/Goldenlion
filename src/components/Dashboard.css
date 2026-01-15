@@ -1,0 +1,69 @@
+.dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+  width: 100%;
+}
+
+.metric-card {
+  background-color: var(--white);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-left: 5px solid var(--primary-gold);
+}
+
+/* RTL Support */
+html[dir="rtl"] .metric-card {
+    border-left: none;
+    border-right: 5px solid var(--primary-gold);
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.metric-icon {
+  font-size: 2.5rem;
+  color: var(--primary-gold);
+  background-color: rgba(212, 175, 55, 0.1);
+  padding: 0.75rem;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.metric-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-content h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.metric-content p {
+  margin: 0.25rem 0 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--dark-slate);
+}
+
+@media (max-width: 768px) {
+  .dashboard-metrics {
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+}

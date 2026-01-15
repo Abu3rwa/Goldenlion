@@ -1,0 +1,73 @@
+:root {
+  /* Brand Colors */
+  --primary-gold: #D4AF37;
+  --primary-gold-hover: #C5A028;
+  --dark-slate: #1A1A1A;
+  --slate-hover: #333333;
+  --white: #FFFFFF;
+  --bg-light: #F8F9FA;
+  --text-main: #2C3E50;
+  --text-light: #6C757D;
+  --danger: #E74C3C;
+  --success: #2ECC71;
+
+  /* Spacing & Layout */
+  --radius: 8px;
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 6px 12px rgba(0, 0, 0, 0.15);
+  --container-width: 1200px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Tajwal', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-main);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--dark-slate);
+  margin-top: 0;
+  font-weight: 700;
+}
+
+/* Global Button Styles */
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Global Link Styles */
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+
+/* Input Styles */
+input {
+  font-family: inherit;
+  outline: none;
+}
+
+input:focus {
+  border-color: var(--primary-gold);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+}

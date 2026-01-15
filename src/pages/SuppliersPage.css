@@ -1,0 +1,108 @@
+.suppliers-page {
+  padding: 1rem;
+}
+
+.suppliers-layout {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.add-supplier-card {
+  background: var(--white);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  height: fit-content;
+}
+
+.add-supplier-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--primary-gold);
+  margin-top: 0;
+}
+
+.add-supplier-card .form-group {
+  margin-bottom: 1rem;
+}
+
+.add-supplier-card label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.add-supplier-card input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: var(--radius);
+}
+
+.save-btn {
+  width: 100%;
+  background-color: var(--primary-gold);
+  color: var(--dark-slate);
+  padding: 0.75rem;
+  font-weight: 600;
+  margin-top: 1rem;
+}
+
+.suppliers-list-container {
+  background: var(--white);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.suppliers-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.supplier-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  transition: background 0.2s;
+}
+
+.supplier-item:hover {
+  background-color: #fafafa;
+}
+
+.supplier-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.supplier-details {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-top: 0.25rem;
+}
+
+.delete-btn-icon {
+  background: none;
+  color: #ccc;
+  font-size: 1.2rem;
+  padding: 0.5rem;
+}
+
+.delete-btn-icon:hover {
+  color: var(--danger);
+  background-color: #ffebee;
+}
+
+@media (max-width: 768px) {
+  .suppliers-layout {
+    grid-template-columns: 1fr;
+  }
+}

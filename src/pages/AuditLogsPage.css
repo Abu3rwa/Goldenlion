@@ -1,0 +1,109 @@
+.audit-page {
+  padding: 1rem;
+}
+
+.subtitle {
+    color: var(--text-light);
+    margin-bottom: 2rem;
+}
+
+.table-container {
+  overflow-x: auto;
+  background-color: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+}
+
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.audit-table th,
+.audit-table td {
+  padding: 1rem;
+  text-align: right;
+  border-bottom: 1px solid #eee;
+}
+
+.audit-table th {
+  background-color: var(--bg-light);
+  color: var(--text-light);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.col-time {
+    direction: ltr; /* Force timestamps to LTR for better readability of numbers */
+    text-align: right;
+    color: var(--text-light);
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.col-user {
+    font-weight: 500;
+    color: var(--dark-slate);
+}
+
+.col-action {
+    font-weight: 600;
+}
+
+.col-entity {
+    color: var(--primary-gold);
+    font-weight: 500;
+}
+
+.details-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.details-list li {
+  margin-bottom: 0.25rem;
+}
+
+.field-name {
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.val-old {
+    text-decoration: line-through;
+    color: var(--danger);
+    margin: 0 0.5rem;
+}
+
+.val-new {
+    color: var(--success);
+    font-weight: 600;
+}
+
+.action-tag {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.action-tag.add {
+    background-color: #E8F5E9;
+    color: #2E7D32;
+}
+
+.action-tag.delete {
+    background-color: #FFEBEE;
+    color: #C62828;
+}
+
+@media (max-width: 768px) {
+    .audit-page {
+        padding: 0.5rem;
+    }
+}

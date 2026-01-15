@@ -1,0 +1,79 @@
+.product-form {
+  width: 100%;
+  max-width: 500px;
+  margin: 3rem auto;
+  padding: 2.5rem;
+  background-color: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.product-form h2 {
+  margin-top: 0;
+  margin-bottom: 2rem;
+  text-align: center;
+  color: var(--primary-gold);
+  font-size: 1.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.product-form div {
+  margin-bottom: 1.5rem;
+}
+
+.product-form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--dark-slate);
+  font-size: 0.9rem;
+}
+
+.product-form input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: #fafafa;
+}
+
+.product-form input:focus {
+  background-color: var(--white);
+  border-color: var(--primary-gold);
+}
+
+.product-form button {
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: var(--radius);
+  background-color: var(--primary-gold);
+  color: var(--dark-slate);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s;
+  margin-top: 1rem;
+}
+
+.product-form button:hover:not(:disabled) {
+  background-color: var(--primary-gold-hover);
+  transform: translateY(-1px);
+}
+
+.product-form button:disabled {
+  background-color: #e0e0e0;
+  color: #a0a0a0;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .product-form {
+    margin: 1.5rem auto;
+    padding: 1.5rem;
+  }
+}

@@ -1,0 +1,131 @@
+.app-header {
+  background-color: var(--dark-slate);
+  color: var(--white);
+  padding: 1rem 0;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-container {
+  max-width: var(--container-width);
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-gold);
+  text-decoration: none;
+}
+
+.brand-icon {
+  font-size: 2rem;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  opacity: 0.8;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.nav-link:hover, .nav-link.active {
+  opacity: 1;
+  color: var(--primary-gold);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-right: 1.5rem; /* Adjusted for RTL: was margin-left */
+  padding-right: 1.5rem; /* Adjusted for RTL: was padding-left */
+  border-right: 1px solid rgba(255, 255, 255, 0.2); /* Adjusted for RTL: was border-left */
+}
+
+/* RTL Specific adjustments since layout direction changed */
+html[dir="rtl"] .user-info {
+    margin-right: 1.5rem;
+    padding-right: 1.5rem;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    margin-left: 0;
+    padding-left: 0;
+    border-left: none;
+}
+
+.user-name {
+  font-size: 0.9rem;
+  color: var(--white);
+}
+
+.logout-btn {
+  background-color: transparent;
+  color: var(--white);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logout-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--white);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .header-container {
+    flex-direction: column;
+    padding: 0 1rem;
+    gap: 1rem;
+  }
+
+  .header-nav {
+    flex-direction: column;
+    width: 100%;
+    gap: 1rem;
+  }
+  
+  .nav-link {
+    width: 100%;
+    justify-content: center;
+    padding: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius);
+  }
+
+  .user-info {
+    margin: 0;
+    padding: 1rem 0 0 0;
+    border-right: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  html[dir="rtl"] .user-info {
+      margin: 0;
+      padding: 1rem 0 0 0;
+      border-right: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+  }
+}

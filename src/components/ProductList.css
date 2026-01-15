@@ -1,0 +1,148 @@
+.product-list {
+  background-color: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 2rem;
+  width: 100%;
+  overflow-x: auto; /* Handle responsive overflow */
+}
+
+.product-list h2 {
+  margin-bottom: 1.5rem;
+  color: var(--dark-slate);
+  border-bottom: 2px solid var(--primary-gold);
+  display: inline-block;
+  padding-bottom: 0.5rem;
+}
+
+.product-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px; /* Increased min-width for more columns */
+}
+
+.product-table th,
+.product-table td {
+  padding: 1rem 1.5rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+/* RTL adjustment for table text alignment */
+html[dir="rtl"] .product-table th,
+html[dir="rtl"] .product-table td {
+    text-align: right;
+}
+
+.product-table th {
+  background-color: var(--bg-light);
+  color: var(--text-light);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+.product-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.product-table tbody tr:hover {
+  background-color: #fafafa;
+}
+
+.product-table td {
+  color: var(--text-main);
+  font-size: 0.95rem;
+}
+
+.cost-val {
+    color: var(--danger); /* Cost is an expense, slightly red */
+    font-family: monospace;
+}
+
+.price-val {
+    color: var(--success); /* Price is revenue, green */
+    font-weight: 600;
+    font-family: monospace;
+}
+
+.supplier-tag {
+    background-color: #F0F4C3;
+    color: #827717;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+/* Action Buttons */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  margin-right: 0.5rem;
+}
+
+html[dir="rtl"] .action-btn {
+    margin-right: 0;
+    margin-left: 0.5rem;
+}
+
+.edit-btn {
+  background-color: #E3F2FD;
+  color: #1976D2;
+}
+
+.edit-btn:hover {
+  background-color: #BBDEFB;
+}
+
+.delete-btn {
+  background-color: #FFEBEE;
+  color: #D32F2F;
+}
+
+.delete-btn:hover {
+  background-color: #FFCDD2;
+}
+
+/* Stock Badges */
+.stock-badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.stock-in {
+  background-color: #E8F5E9;
+  color: #2E7D32;
+}
+
+.stock-low {
+  background-color: #FFF3E0;
+  color: #EF6C00;
+}
+
+.stock-out {
+  background-color: #FFEBEE;
+  color: #C62828;
+}
+
+@media (max-width: 768px) {
+  .product-list {
+    padding: 1rem;
+  }
+  
+  .product-table th,
+  .product-table td {
+    padding: 0.75rem 1rem;
+  }
+}
