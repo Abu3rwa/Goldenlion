@@ -3,18 +3,21 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addNewProduct, updateExistingProduct } from '../store/productsSlice';
 import { fetchSuppliers } from '../store/suppliersSlice';
 import { useParams, useNavigate } from 'react-router-dom';
+import { userService } from '../services/userService';
 import './ProductForm.css';
 
 const ProductForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { userProfile } = useSelector((state) => state.auth);
   
   const productToEdit = useSelector((state) => 
     id ? state.products.products.find(p => p.id === id) : null
   );
 
   const { suppliers } = useSelector((state) => state.suppliers);
+  const canManageInventory = userService.canPerformAction(userProfile?.role, 'MANAGE_INVENTORY');
 
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -79,7 +82,7 @@ const ProductForm = () => {
       <h2>{id ? 'تعديل المنتج' : 'إضافة منتج'}</h2>
       <div>
         <label>الاسم</label>
-        <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
+        <input type="text" value={name} onChange={(e) => setName(e.target.value)} disabled={!canManageInventory} />
       </div>
       <div>
         <label>المورد</label>
@@ -87,6 +90,7 @@ const ProductForm = () => {
           value={supplierId} 
           onChange={(e) => setSupplierId(e.target.value)}
           className="supplier-select"
+          disabled={!canManageInventory}
         >
           <option value="">-- اختر مورد --</option>
           {suppliers.map(s => (
@@ -97,19 +101,24 @@ const ProductForm = () => {
       <div>
         <label>الكمية</label>
 
-        <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+        <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} disabled={!canManageInventory} />
       </div>
       <div>
         <label>سعر التكلفة (رأس المال)</label>
-        <input type="number" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} />
+        <input type="number" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} disabled={!canManageInventory} />
       </div>
       <div>
         <label>سعر البيع</label>
-        <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
+        <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} disabled={!canManageInventory} />
       </div>
-      <button type="submit" disabled={!canSave}>
-        {addRequestStatus === 'pending' ? 'جاري الحفظ...' : 'حفظ'}
-      </button>
+      {canManageInventory && (
+        <button type="submit" disabled={!canSave}>
+          {addRequestStatus === 'pending' ? 'جاري الحفظ...' : 'حفظ'}
+        </button>
+      )}
+      {!canManageInventory && (
+        <p className="view-only-msg">لديك صلاحية العرض فقط. لا يمكنك التعديل أو الحفظ.</p>
+      )}
     </form>
   );
 };

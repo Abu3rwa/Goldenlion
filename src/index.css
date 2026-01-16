@@ -12,13 +12,15 @@
   --success: #2ECC71;
 
   /* Spacing & Layout */
-  --radius: 8px;
+  --radius: 4px;
   --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   --shadow-hover: 0 6px 12px rgba(0, 0, 0, 0.15);
   --container-width: 1200px;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -33,7 +35,12 @@ body {
   flex-direction: column;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: var(--dark-slate);
   margin-top: 0;
   font-weight: 700;
@@ -61,13 +68,196 @@ a {
   transition: color 0.2s ease;
 }
 
-/* Input Styles */
-input {
+/* Global Input Styles */
+input,
+select,
+textarea {
   font-family: inherit;
   outline: none;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  padding: 0.6rem 1rem;
+  transition: all 0.2s ease;
 }
 
-input:focus {
+input:focus,
+select:focus,
+textarea:focus {
   border-color: var(--primary-gold);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+/* Global Table Styles - Premium Bordered Design */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--white);
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.app-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 600px;
+}
+
+.app-table th {
+  background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+  color: var(--dark-slate);
+  font-weight: 700;
+  padding: 1rem;
+  text-align: right;
+  border-bottom: 2px solid #e0e0e0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.app-table th:first-child {
+  border-radius: 12px 0 0 0;
+}
+
+.app-table th:last-child {
+  border-radius: 0 12px 0 0;
+}
+
+.app-table td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+  color: var(--text-main);
+  font-size: 0.9rem;
+}
+
+.app-table tbody tr {
+  transition: background 0.2s;
+}
+
+.app-table tbody tr:hover {
+  background-color: rgba(212, 175, 55, 0.04);
+}
+
+.app-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.app-table tbody tr:last-child td:first-child {
+  border-radius: 0 0 0 12px;
+}
+
+.app-table tbody tr:last-child td:last-child {
+  border-radius: 0 0 12px 0;
+}
+
+/* Column time styling */
+.col-time {
+  direction: ltr;
+  text-align: right;
+  color: var(--text-light);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+/* Badge Styles */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.badge.in,
+.badge.success {
+  background: rgba(46, 204, 113, 0.12);
+  color: var(--success);
+}
+
+.badge.out,
+.badge.danger {
+  background: rgba(231, 76, 60, 0.12);
+  color: var(--danger);
+}
+
+.badge.pending {
+  background: rgba(241, 196, 15, 0.12);
+  color: #F39C12;
+}
+
+.badge.gold {
+  background: rgba(212, 175, 55, 0.12);
+  color: var(--primary-gold);
+}
+
+/* Text Colors */
+.text-danger {
+  color: var(--danger);
+}
+
+.text-success {
+  color: var(--success);
+}
+
+.text-gold {
+  color: var(--primary-gold);
+}
+
+.text-light {
+  color: var(--text-light);
+}
+
+/* Delete Button */
+.delete-btn-icon {
+  color: var(--danger);
+  background: rgba(231, 76, 60, 0.1);
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+.delete-btn-icon:hover {
+  background: var(--danger);
+  color: var(--white);
+}
+
+/* Edit Button */
+.edit-btn-icon {
+  color: var(--primary-gold);
+  background: rgba(212, 175, 55, 0.1);
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+.edit-btn-icon:hover {
+  background: var(--primary-gold);
+  color: var(--dark-slate);
+}
+
+/* Action buttons group */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Shadow utilities */
+.shadow-sm {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.shadow-md {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }

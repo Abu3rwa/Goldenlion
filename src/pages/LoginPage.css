@@ -54,7 +54,8 @@
   border: 1px solid #ddd;
   border-radius: var(--radius);
   font-size: 1rem;
-  box-sizing: border-box; /* Ensure padding doesn't affect width */
+  box-sizing: border-box;
+  /* Ensure padding doesn't affect width */
 }
 
 .login-input:focus {
@@ -82,8 +83,9 @@
 }
 
 .login-btn:hover:not(:disabled) {
-  background-color: #c4a037; /* Darker gold */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background-color: #c4a037;
+  /* Darker gold */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .login-btn:disabled {
@@ -109,4 +111,40 @@
   color: var(--danger);
   margin-top: 1rem;
   font-size: 0.9rem;
+}
+
+/* Invite Code Styling */
+.invite-code-group {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #ddd;
+}
+
+.invite-code-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--primary-gold);
+  font-size: 0.9rem;
+}
+
+.invite-code-label svg {
+  font-size: 1.1rem;
+}
+
+.invite-input {
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  font-size: 1.2rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+.invite-hint {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-light);
 }

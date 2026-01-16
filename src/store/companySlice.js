@@ -2,8 +2,9 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   companyName: '',
-  currency: '',
-  language: 'en',
+  currency: 'د.ل',
+  language: 'ar',
+
 };
 
 const companySlice = createSlice({
@@ -17,8 +18,8 @@ const companySlice = createSlice({
     },
     clearCompanySettings: (state) => {
       state.companyName = '';
-      state.currency = '';
-      state.language = 'en';
+      state.currency = 'د.ل';
+      state.language = 'ar';
     },
   },
 });

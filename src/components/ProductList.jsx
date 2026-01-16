@@ -5,12 +5,16 @@ import { fetchSuppliers } from '../store/suppliersSlice';
 import { Link } from 'react-router-dom';
 import { MdEdit, MdDelete } from 'react-icons/md';
 import { formatCurrency } from '../utils/currency';
+import { userService } from '../services/userService';
 import './ProductList.css';
 
 const ProductList = ({ currency }) => {
   const dispatch = useDispatch();
   const { products, status, error } = useSelector((state) => state.products);
   const { suppliers } = useSelector((state) => state.suppliers);
+  const { userProfile } = useSelector((state) => state.auth);
+
+  const canManageInventory = userService.canPerformAction(userProfile?.role, 'MANAGE_INVENTORY');
 
   useEffect(() => {
     if (status === 'idle') {
@@ -55,7 +59,7 @@ const ProductList = ({ currency }) => {
             <th>الكمية</th>
             <th>التكلفة</th>
             <th>البيع</th>
-            <th>الإجراءات</th>
+            {canManageInventory && <th>الإجراءات</th>}
           </tr>
         </thead>
         <tbody>
@@ -67,14 +71,16 @@ const ProductList = ({ currency }) => {
               <td>{product.quantity}</td>
               <td className="cost-val">{formatCurrency(product.costPrice, currency)}</td>
               <td className="price-val">{formatCurrency(product.price, currency)}</td>
-              <td>
-                  <Link to={`/edit/${product.id}`} className="action-btn edit-btn">
-                    <MdEdit /> تعديل
-                  </Link>
-                  <button onClick={() => handleDelete(product.id)} className="action-btn delete-btn">
-                    <MdDelete /> حذف
-                  </button>
-              </td>
+              {canManageInventory && (
+                <td>
+                    <Link to={`/edit/${product.id}`} className="action-btn edit-btn">
+                      <MdEdit /> تعديل
+                    </Link>
+                    <button onClick={() => handleDelete(product.id)} className="action-btn delete-btn">
+                      <MdDelete /> حذف
+                    </button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

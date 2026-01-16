@@ -1,5 +1,6 @@
 import { db } from './firebaseConfig';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
+import { auditService } from './auditService';
 
 const suppliersCollectionRef = collection(db, 'suppliers');
 
@@ -17,6 +18,14 @@ export const supplierService = {
   addSupplier: async (supplier) => {
     try {
       const docRef = await addDoc(suppliersCollectionRef, supplier);
+      
+      await auditService.logAction(
+        'ADD_SUPPLIER',
+        docRef.id,
+        supplier.name,
+        { newValue: supplier }
+      );
+
       return { ...supplier, id: docRef.id };
     } catch (error) {
       console.error("Error adding supplier:", error);
@@ -27,7 +36,19 @@ export const supplierService = {
   updateSupplier: async (id, updatedSupplier) => {
     try {
       const supplierDoc = doc(db, 'suppliers', id);
+      
+      const oldDoc = await getDoc(supplierDoc);
+      const oldData = oldDoc.data();
+
       await updateDoc(supplierDoc, updatedSupplier);
+
+      await auditService.logAction(
+        'UPDATE_SUPPLIER',
+        id,
+        updatedSupplier.name || oldData.name,
+        { oldValue: oldData, newValue: updatedSupplier }
+      );
+
       return { ...updatedSupplier, id };
     } catch (error) {
       console.error("Error updating supplier:", error);
@@ -38,7 +59,18 @@ export const supplierService = {
   deleteSupplier: async (id) => {
     try {
       const supplierDoc = doc(db, 'suppliers', id);
+
+      const oldDoc = await getDoc(supplierDoc);
+      const oldData = oldDoc.data();
+
       await deleteDoc(supplierDoc);
+
+      await auditService.logAction(
+        'DELETE_SUPPLIER',
+        id,
+        oldData?.name || 'Unknown',
+        { oldValue: oldData }
+      );
     } catch (error) {
       console.error("Error deleting supplier:", error);
       throw error;

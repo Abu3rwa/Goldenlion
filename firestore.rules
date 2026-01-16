@@ -1,0 +1,121 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===== Helper Functions =====
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function getUserRole() {
+      return getUserData().role;
+    }
+    
+    function isOwner() {
+      return isAuthenticated() && getUserRole() == 'owner';
+    }
+    
+    function isAccountant() {
+      return isAuthenticated() && getUserRole() == 'accountant';
+    }
+    
+    function isStaff() {
+      return isAuthenticated() && getUserRole() == 'staff';
+    }
+    
+    function isAccountantOrOwner() {
+      return isOwner() || isAccountant();
+    }
+    
+    // ===== Users Collection =====
+    match /users/{userId} {
+      // Anyone authenticated can read user profiles
+      allow read: if isAuthenticated();
+      
+      // Users can only create their own profile during registration
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Only owners can update other users' roles
+      // Users can update their own profile (except role)
+      allow update: if isOwner() || 
+        (request.auth.uid == userId && 
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
+      
+      // Never delete users
+      allow delete: if false;
+    }
+    
+    // ===== Products Collection =====
+    match /products/{productId} {
+      // Authenticated users can read products
+      allow read: if isAuthenticated();
+      
+      // Only accountants can create/update/delete products
+      allow create, update, delete: if isAccountant();
+    }
+    
+    // ===== Suppliers Collection =====
+    match /suppliers/{supplierId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAccountant();
+    }
+    
+    // ===== Customers Collection =====
+    match /customers/{customerId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAccountant();
+    }
+    
+    // ===== Transactions Collection =====
+    match /transactions/{transactionId} {
+      // Authenticated users can read transactions
+      allow read: if isAuthenticated();
+      
+      // Only accountants can create transactions
+      allow create: if isAccountant();
+      
+      // Accountants and owners can add comments (update)
+      allow update: if isAccountantOrOwner();
+      
+      // Transactions cannot be deleted
+      allow delete: if false;
+    }
+    
+    // ===== Invites Collection =====
+    match /invites/{inviteId} {
+      // Anyone can read invites (needed for validation during registration)
+      // This is safe because the code is required to register
+      allow read: if true;
+      
+      // Only owners can create and delete invites
+      allow create, delete: if isOwner();
+      
+      // Anyone authenticated can mark invite as used (during registration)
+      allow update: if isAuthenticated() && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used', 'usedAt']);
+    }
+    
+    // ===== Audit Logs Collection =====
+    match /audit_logs/{logId} {
+      // Only accountants and owners can read audit logs
+      allow read: if isAccountantOrOwner();
+      
+      // Any authenticated user can create logs
+      allow create: if isAuthenticated();
+      
+      // Logs are immutable
+      allow update, delete: if false;
+    }
+    
+    // ===== Company Settings =====
+    match /settings/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner();
+    }
+  }
+}

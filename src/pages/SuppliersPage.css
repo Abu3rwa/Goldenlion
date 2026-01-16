@@ -56,37 +56,12 @@
   background: var(--white);
   padding: 1.5rem;
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  border: 1px solid #edf2f7;
 }
 
-.suppliers-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.supplier-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid #eee;
-  transition: background 0.2s;
-}
-
-.supplier-item:hover {
-  background-color: #fafafa;
-}
-
-.supplier-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.supplier-details {
-  font-size: 0.85rem;
-  color: var(--text-light);
-  margin-top: 0.25rem;
+/* Remove old list styles */
+.suppliers-list, .supplier-item, .supplier-info, .supplier-details {
+  display: none;
 }
 
 .delete-btn-icon {

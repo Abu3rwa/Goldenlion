@@ -1,0 +1,122 @@
+.stock-out-page {
+    padding: 1.5rem;
+    max-width: var(--container-width);
+    margin: 0 auto;
+    direction: rtl;
+}
+
+.stock-out-page h1 {
+    margin-bottom: 1.5rem;
+    color: var(--dark-slate);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stock-out-page h1 svg {
+    color: var(--danger);
+}
+
+.stock-out-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 2rem;
+}
+
+@media (max-width: 1000px) {
+    .stock-out-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Form Card */
+.stock-form-card {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    height: fit-content;
+}
+
+.stock-form-card h3 {
+    margin-bottom: 1.5rem;
+    color: var(--primary-gold);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Product Stock Indicator */
+.stock-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    margin-right: 0.5rem;
+}
+
+.stock-indicator.low {
+    background: rgba(231, 76, 60, 0.1);
+    color: var(--danger);
+}
+
+.stock-indicator.ok {
+    background: rgba(46, 204, 113, 0.1);
+    color: var(--success);
+}
+
+/* Stock Warning */
+.stock-warning {
+    background: rgba(241, 196, 15, 0.1);
+    color: #F39C12;
+    padding: 0.75rem;
+    border-radius: var(--radius);
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Cart styles are shared with StockInPage */
+.cart-card {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.cart-card h3 {
+    margin-bottom: 1rem;
+    color: var(--dark-slate);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cart-badge {
+    background: var(--danger);
+    color: var(--white);
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+}
+
+/* Profit Display in Cart */
+.profit-row {
+    color: var(--success);
+    font-weight: 600;
+}
+
+.profit-row.negative {
+    color: var(--danger);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .stock-out-page {
+        padding: 1rem;
+    }
+}

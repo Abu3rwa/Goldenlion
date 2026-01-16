@@ -1,35 +1,67 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authService } from '../services/authService';
+import { userService } from '../services/userService';
 
 const initialState = {
   user: null,
+  userProfile: null, // Includes role
+  allUsers: [],
   status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
   error: null,
 };
 
 export const login = createAsyncThunk('auth/login', async ({ email, password }) => {
   const user = await authService.loginWithEmail(email, password);
+  // Get/create user profile with role
+  const profile = await userService.ensureUserProfile(user);
   return {
-    uid: user.uid,
-    displayName: user.displayName || email, // Fallback to email if displayName is null
-    email: user.email,
-    photoURL: user.photoURL,
+    user: {
+      uid: user.uid,
+      displayName: user.displayName || email,
+      email: user.email,
+      photoURL: user.photoURL,
+    },
+    profile
   };
 });
 
-export const register = createAsyncThunk('auth/register', async ({ email, password }) => {
+export const register = createAsyncThunk('auth/register', async ({ email, password, assignedRole }) => {
   const user = await authService.registerWithEmail(email, password);
+  // Create user profile with role from invite (or default if not provided)
+  const profile = await userService.ensureUserProfile(user, assignedRole);
   return {
-    uid: user.uid,
-    displayName: user.displayName || email,
-    email: user.email,
-    photoURL: user.photoURL,
+    user: {
+      uid: user.uid,
+      displayName: user.displayName || email,
+      email: user.email,
+      photoURL: user.photoURL,
+    },
+    profile
   };
 });
 
 export const logout = createAsyncThunk('auth/logout', async () => {
   await authService.logout();
 });
+
+export const fetchUserProfile = createAsyncThunk('auth/fetchProfile', async (uid) => {
+  return await userService.getUserProfile(uid);
+});
+
+export const fetchAllUsers = createAsyncThunk('auth/fetchAllUsers', async () => {
+  return await userService.getAllUsers();
+});
+
+export const updateUserRole = createAsyncThunk(
+  'auth/updateUserRole',
+  async ({ userId, newRole }, { rejectWithValue }) => {
+    try {
+      return await userService.updateUserRole(userId, newRole);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
 
 const authSlice = createSlice({
   name: 'auth',
@@ -39,8 +71,12 @@ const authSlice = createSlice({
       state.user = action.payload;
       state.status = 'succeeded';
     },
+    setUserProfile: (state, action) => {
+      state.userProfile = action.payload;
+    },
     clearUser: (state) => {
       state.user = null;
+      state.userProfile = null;
       state.status = 'idle';
     }
   },
@@ -51,7 +87,8 @@ const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.user = action.payload;
+        state.user = action.payload.user;
+        state.userProfile = action.payload.profile;
       })
       .addCase(login.rejected, (state, action) => {
         state.status = 'failed';
@@ -62,7 +99,8 @@ const authSlice = createSlice({
       })
       .addCase(register.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.user = action.payload;
+        state.user = action.payload.user;
+        state.userProfile = action.payload.profile;
       })
       .addCase(register.rejected, (state, action) => {
         state.status = 'failed';
@@ -70,11 +108,26 @@ const authSlice = createSlice({
       })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
+        state.userProfile = null;
         state.status = 'idle';
+      })
+      .addCase(fetchUserProfile.fulfilled, (state, action) => {
+        state.userProfile = action.payload;
+      })
+      .addCase(fetchAllUsers.fulfilled, (state, action) => {
+        state.allUsers = action.payload;
+      })
+      .addCase(updateUserRole.fulfilled, (state, action) => {
+        const { id, role } = action.payload;
+        const user = state.allUsers.find(u => u.id === id);
+        if (user) {
+          user.role = role;
+        }
       });
   },
 });
 
-export const { setUser, clearUser } = authSlice.actions;
+export const { setUser, setUserProfile, clearUser } = authSlice.actions;
 
 export default authSlice.reducer;
+
