@@ -6,7 +6,6 @@ import { Link } from 'react-router-dom';
 import { MdEdit, MdDelete } from 'react-icons/md';
 import { formatCurrency } from '../utils/currency';
 import { userService } from '../services/userService';
-import './ProductList.css';
 
 const ProductList = ({ currency }) => {
   const dispatch = useDispatch();
@@ -35,63 +34,87 @@ const ProductList = ({ currency }) => {
   }
 
   const getStockStatus = (qty) => {
-    if (qty === 0) return <span className="stock-badge stock-out">نفد من المخزون</span>;
-    if (qty < 10) return <span className="stock-badge stock-low">كمية منخفضة</span>;
-    return <span className="stock-badge stock-in">متوفر</span>;
+    if (qty === 0) return <span className="badge bg-danger-subtle text-danger border">نفد</span>;
+    if (qty < 10) return <span className="badge bg-warning-subtle text-warning border">منخفض</span>;
+    return <span className="badge bg-success-subtle text-success border">متوفر</span>;
   };
 
   let content;
 
   if (status === 'loading') {
-    content = <div style={{ textAlign: 'center', padding: '2rem' }}>جاري تحميل المخزون...</div>;
+    content = (
+      <div className="text-center py-5">
+        <div className="spinner-border text-gold" role="status">
+          <span className="visually-hidden">جاري التحميل...</span>
+        </div>
+      </div>
+    );
   } else if (status === 'failed') {
-    content = <div style={{ color: 'var(--danger)', padding: '2rem' }}>خطأ: {error}</div>;
+    content = <div className="alert alert-danger mx-3 my-4">خطأ: {error}</div>;
   } else if (products.length === 0) {
-    content = <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-light)' }}>لم يتم العثور على منتجات. ابدأ بإضافة بعض المنتجات!</div>;
+    content = (
+      <div className="text-center py-5">
+        <p className="text-muted">لم يتم العثور على منتجات. ابدأ بإضافة بعض المنتجات!</p>
+      </div>
+    );
   } else {
     content = (
-      <table className="product-table">
-        <thead>
-          <tr>
-            <th>الاسم</th>
-            <th>المورد</th>
-            <th>الحالة</th>
-            <th>الكمية</th>
-            <th>التكلفة</th>
-            <th>البيع</th>
-            {canManageInventory && <th>الإجراءات</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((product) => (
-            <tr key={product.id}>
-              <td><strong>{product.name}</strong></td>
-              <td><span className="supplier-tag">{getSupplierName(product.supplierId)}</span></td>
-              <td>{getStockStatus(product.quantity)}</td>
-              <td>{product.quantity}</td>
-              <td className="cost-val">{formatCurrency(product.costPrice, currency)}</td>
-              <td className="price-val">{formatCurrency(product.price, currency)}</td>
-              {canManageInventory && (
-                <td>
-                    <Link to={`/edit/${product.id}`} className="action-btn edit-btn">
-                      <MdEdit /> تعديل
-                    </Link>
-                    <button onClick={() => handleDelete(product.id)} className="action-btn delete-btn">
-                      <MdDelete /> حذف
-                    </button>
-                </td>
-              )}
+      <div className="table-responsive">
+        <table className="table table-hover align-middle mb-0">
+          <thead className="table-light">
+            <tr>
+              <th>الاسم</th>
+              <th>المورد</th>
+              <th>الحالة</th>
+              <th className="text-center">الكمية</th>
+              <th>التكلفة</th>
+              <th>البيع</th>
+              {canManageInventory && <th className="text-center">الإجراءات</th>}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {products.map((product) => (
+              <tr key={product.id}>
+                <td>
+                  <div className="fw-bold">{product.name}</div>
+                  <small className="text-muted d-block d-md-none">{getSupplierName(product.supplierId)}</small>
+                </td>
+                <td className="d-none d-md-table-cell">
+                  <span className="small text-muted">{getSupplierName(product.supplierId)}</span>
+                </td>
+                <td>{getStockStatus(product.quantity)}</td>
+                <td className="text-center fw-bold">{product.quantity}</td>
+                <td className="text-muted small">{formatCurrency(product.costPrice, currency)}</td>
+                <td className="fw-bold text-success">{formatCurrency(product.price, currency)}</td>
+                {canManageInventory && (
+                  <td className="text-center">
+                    <div className="btn-group btn-group-sm">
+                      <Link to={`/edit/${product.id}`} className="btn btn-outline-primary border-0">
+                        <MdEdit />
+                      </Link>
+                      <button onClick={() => handleDelete(product.id)} className="btn btn-outline-danger border-0">
+                        <MdDelete />
+                      </button>
+                    </div>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     );
   }
 
   return (
-    <div className="product-list">
-      <h2>قائمة المخزون</h2>
-      {content}
+    <div className="card border-0 shadow-sm mt-4">
+      <div className="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h2 className="h5 mb-0 fw-bold">قائمة المخزون</h2>
+        <span className="badge bg-gold text-dark">{products.length} منتج</span>
+      </div>
+      <div className="card-body p-0">
+        {content}
+      </div>
     </div>
   );
 };

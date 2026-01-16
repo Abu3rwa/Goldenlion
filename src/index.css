@@ -10,18 +10,6 @@
   --text-light: #6C757D;
   --danger: #E74C3C;
   --success: #2ECC71;
-
-  /* Spacing & Layout */
-  --radius: 4px;
-  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-hover: 0 6px 12px rgba(0, 0, 0, 0.15);
-  --container-width: 1200px;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
 }
 
 body {
@@ -30,234 +18,150 @@ body {
   background-color: var(--bg-light);
   color: var(--text-main);
   line-height: 1.6;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+/* Custom Bootstrap Overrides */
+.btn-gold {
+  background-color: var(--primary-gold);
   color: var(--dark-slate);
-  margin-top: 0;
-  font-weight: 700;
-}
-
-/* Global Button Styles */
-button {
-  cursor: pointer;
   border: none;
-  border-radius: var(--radius);
-  font-family: inherit;
-  font-weight: 600;
+  font-weight: 700;
   transition: all 0.2s ease;
 }
 
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Global Link Styles */
-a {
-  text-decoration: none;
-  color: inherit;
-  transition: color 0.2s ease;
-}
-
-/* Global Input Styles */
-input,
-select,
-textarea {
-  font-family: inherit;
-  outline: none;
-  border: 1px solid #e2e8f0;
-  border-radius: var(--radius);
-  padding: 0.6rem 1rem;
-  transition: all 0.2s ease;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: var(--primary-gold);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
-}
-
-/* Global Table Styles - Premium Bordered Design */
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
-  background: var(--white);
-  border-radius: 12px;
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.app-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  min-width: 600px;
-}
-
-.app-table th {
-  background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+.btn-gold:hover {
+  background-color: var(--primary-gold-hover);
   color: var(--dark-slate);
-  font-weight: 700;
-  padding: 1rem;
-  text-align: right;
-  border-bottom: 2px solid #e0e0e0;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
+  transform: translateY(-1px);
 }
 
-.app-table th:first-child {
-  border-radius: 12px 0 0 0;
-}
-
-.app-table th:last-child {
-  border-radius: 0 12px 0 0;
-}
-
-.app-table td {
-  padding: 0.9rem 1rem;
-  border-bottom: 1px solid #f0f0f0;
-  vertical-align: middle;
-  color: var(--text-main);
-  font-size: 0.9rem;
-}
-
-.app-table tbody tr {
-  transition: background 0.2s;
-}
-
-.app-table tbody tr:hover {
-  background-color: rgba(212, 175, 55, 0.04);
-}
-
-.app-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.app-table tbody tr:last-child td:first-child {
-  border-radius: 0 0 0 12px;
-}
-
-.app-table tbody tr:last-child td:last-child {
-  border-radius: 0 0 12px 0;
-}
-
-/* Column time styling */
-.col-time {
-  direction: ltr;
-  text-align: right;
-  color: var(--text-light);
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
-
-/* Badge Styles */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.badge.in,
-.badge.success {
-  background: rgba(46, 204, 113, 0.12);
-  color: var(--success);
-}
-
-.badge.out,
-.badge.danger {
-  background: rgba(231, 76, 60, 0.12);
-  color: var(--danger);
-}
-
-.badge.pending {
-  background: rgba(241, 196, 15, 0.12);
-  color: #F39C12;
-}
-
-.badge.gold {
-  background: rgba(212, 175, 55, 0.12);
+.btn-outline-gold {
+  border: 1px solid var(--primary-gold);
   color: var(--primary-gold);
+  background: transparent;
+  font-weight: 600;
 }
 
-/* Text Colors */
-.text-danger {
-  color: var(--danger);
-}
-
-.text-success {
-  color: var(--success);
+.btn-outline-gold:hover {
+  background-color: var(--primary-gold);
+  color: var(--dark-slate);
 }
 
 .text-gold {
-  color: var(--primary-gold);
+  color: var(--primary-gold) !important;
 }
 
-.text-light {
-  color: var(--text-light);
+.bg-gold {
+  background-color: var(--primary-gold) !important;
 }
 
-/* Delete Button */
-.delete-btn-icon {
-  color: var(--danger);
-  background: rgba(231, 76, 60, 0.1);
-  padding: 0.45rem 0.75rem;
+/* Custom RTL Adjustments for Bootstrap Icons */
+[dir="rtl"] .ms-1 {
+  margin-right: 0.25rem !important;
+  margin-left: 0 !important;
+}
+
+[dir="rtl"] .me-1 {
+  margin-left: 0.25rem !important;
+  margin-right: 0 !important;
+}
+
+/* Table Enhancements */
+.table th {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background-color: #f8f9fa;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(212, 175, 55, 0.05);
+}
+
+/* Card Enhancements */
+.card {
   border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.8rem;
-  transition: all 0.2s;
 }
 
-.delete-btn-icon:hover {
-  background: var(--danger);
-  color: var(--white);
+/* Print Styles */
+@media print {
+
+  /* Reset page layout */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  html,
+  body {
+    height: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white;
+    overflow: visible;
+  }
+
+  /* Hide the main app */
+  #root {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Show the print root */
+  #print-root {
+    display: block !important;
+    visibility: visible !important;
+    background: white;
+    width: 100%;
+    height: auto;
+    position: relative;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+  }
+
+  /* Ensure all print content is visible */
+  #print-root * {
+    visibility: visible !important;
+  }
+
+  /* Optional: Force white background to save ink if needed, but usually we want the detailed receipt styling */
+  .print-content {
+    padding: 0;
+    background: white;
+  }
+
+  /* Helper to explicitly hide elements in print */
+  .no-print {
+    display: none !important;
+  }
 }
 
-/* Edit Button */
-.edit-btn-icon {
-  color: var(--primary-gold);
-  background: rgba(212, 175, 55, 0.1);
-  padding: 0.45rem 0.75rem;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.8rem;
-  transition: all 0.2s;
+/* Default state on screen: hidden */
+#print-root {
+  display: none;
 }
 
-.edit-btn-icon:hover {
+.printable-area {
+  /* Legacy cleanup */
+  display: none;
+}
+
+/* RTL Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
   background: var(--primary-gold);
-  color: var(--dark-slate);
-}
-
-/* Action buttons group */
-.action-buttons {
-  display: flex;
-  gap: 0.5rem;
-}
-
-/* Shadow utilities */
-.shadow-sm {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.shadow-md {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }

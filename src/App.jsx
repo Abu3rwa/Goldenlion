@@ -76,9 +76,9 @@ function App() {
 
   return (
     <Router>
-      <div dir="rtl">
+      <div dir="rtl" className="min-vh-100 bg-light">
         <Header />
-        <main>
+        <main className="container-fluid py-4 px-3 px-md-4">
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route

@@ -15,6 +15,8 @@ import {
 } from 'firebase/firestore';
 import { COLLECTIONS, TRANSACTION_TYPES, USER_ROLES } from '../utils/constants';
 import { toCents, calculateLineTotal, addCents } from '../utils/decimalUtils';
+import { serializeFirestoreData } from '../utils/serialization';
+import { generateShortId } from '../utils/idGenerator';
 
 /**
  * Verify user is an accountant before allowing transaction creation
@@ -49,6 +51,7 @@ export const transactionService = {
         const user = await verifyAccountantRole();
 
         const { supplierId, supplierName, items, notes } = data;
+        const displayId = generateShortId();
 
         // Prepare items with cents
         const preparedItems = items.map(item => ({
@@ -82,8 +85,9 @@ export const transactionService = {
 
             // Create transaction record
             const txRef = doc(collection(db, COLLECTIONS.TRANSACTIONS));
-            transaction.set(txRef, {
+            const txData = {
                 type: TRANSACTION_TYPES.STOCK_IN,
+                displayId,
                 supplierId,
                 supplierName,
                 customerId: null,
@@ -98,12 +102,30 @@ export const transactionService = {
                     email: user?.email || 'system'
                 },
                 createdAt: serverTimestamp()
+            };
+            transaction.set(txRef, txData);
+
+            // COMPLIANCE (Requirement 2.4): Log to audit trail
+            const auditRef = doc(collection(db, 'audit_logs'));
+            transaction.set(auditRef, {
+                action: 'STOCK_IN',
+                entityId: txRef.id,
+                entityName: supplierName,
+                details: {
+                    displayId,
+                    itemCount: items.length,
+                    totalValue: totalCostCents / 100,
+                    notes: notes || ''
+                },
+                userId: user?.uid || 'system',
+                userEmail: user?.email || 'system',
+                timestamp: serverTimestamp()
             });
 
             return txRef.id;
         });
 
-        return { id: transactionId, type: TRANSACTION_TYPES.STOCK_IN };
+        return { id: transactionId, type: TRANSACTION_TYPES.STOCK_IN, displayId };
     },
 
     /**
@@ -115,6 +137,7 @@ export const transactionService = {
         const user = await verifyAccountantRole();
 
         const { customerId, customerName, items, notes } = data;
+        const displayId = generateShortId();
 
         // Prepare items with cents
         const preparedItems = items.map(item => ({
@@ -157,8 +180,9 @@ export const transactionService = {
 
             // Create transaction record
             const txRef = doc(collection(db, COLLECTIONS.TRANSACTIONS));
-            transaction.set(txRef, {
+            const txData = {
                 type: TRANSACTION_TYPES.STOCK_OUT,
+                displayId,
                 supplierId: null,
                 supplierName: null,
                 customerId,
@@ -173,12 +197,30 @@ export const transactionService = {
                     email: user?.email || 'system'
                 },
                 createdAt: serverTimestamp()
+            };
+            transaction.set(txRef, txData);
+
+            // COMPLIANCE (Requirement 2.4): Log to audit trail
+            const auditRef = doc(collection(db, 'audit_logs'));
+            transaction.set(auditRef, {
+                action: 'STOCK_OUT',
+                entityId: txRef.id,
+                entityName: customerName,
+                details: {
+                    displayId,
+                    itemCount: items.length,
+                    totalValue: totalPriceCents / 100,
+                    notes: notes || ''
+                },
+                userId: user?.uid || 'system',
+                userEmail: user?.email || 'system',
+                timestamp: serverTimestamp()
             });
 
             return txRef.id;
         });
 
-        return { id: transactionId, type: TRANSACTION_TYPES.STOCK_OUT };
+        return { id: transactionId, type: TRANSACTION_TYPES.STOCK_OUT, displayId };
     },
 
     /**
@@ -195,10 +237,11 @@ export const transactionService = {
         }
 
         const querySnapshot = await getDocs(q);
-        return querySnapshot.docs.map(doc => ({
+        const transactions = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
+        return serializeFirestoreData(transactions);
     },
 
     /**
@@ -232,6 +275,6 @@ export const transactionService = {
             comments: [...currentComments, comment]
         });
 
-        return comment;
+        return serializeFirestoreData(comment);
     }
 };

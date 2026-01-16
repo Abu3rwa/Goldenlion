@@ -1,6 +1,7 @@
 import { db } from './firebaseConfig';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { auditService } from './auditService';
+import { serializeFirestoreData } from '../utils/serialization';
 
 const PRODUCTS_COLLECTION = 'products';
 
@@ -8,16 +9,17 @@ export const productService = {
   // Fetch all products
   getAllProducts: async () => {
     const querySnapshot = await getDocs(collection(db, PRODUCTS_COLLECTION));
-    return querySnapshot.docs.map(doc => ({
+    const products = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
+    return serializeFirestoreData(products);
   },
 
   // Add a new product
   addProduct: async (productData) => {
     const docRef = await addDoc(collection(db, PRODUCTS_COLLECTION), productData);
-    
+
     await auditService.logAction(
       'ADD_PRODUCT',
       docRef.id,
@@ -25,16 +27,16 @@ export const productService = {
       { newValue: productData }
     );
 
-    return {
+    return serializeFirestoreData({
       id: docRef.id,
       ...productData
-    };
+    });
   },
 
   // Update a product
   updateProduct: async (id, productData) => {
     const productRef = doc(db, PRODUCTS_COLLECTION, id);
-    
+
     // Get old data for audit
     const oldDoc = await getDoc(productRef);
     const oldData = oldDoc.data();
@@ -60,13 +62,13 @@ export const productService = {
       deltas
     );
 
-    return { id, ...productData };
+    return serializeFirestoreData({ id, ...productData });
   },
 
   // Delete a product
   deleteProduct: async (id) => {
     const productRef = doc(db, PRODUCTS_COLLECTION, id);
-    
+
     // Get old data for audit before deletion
     const oldDoc = await getDoc(productRef);
     const oldData = oldDoc.data();

@@ -14,24 +14,35 @@ import {
     MdComment,
     MdSend,
     MdInbox,
-    MdFilterList
+    MdFilterList,
+    MdPrint
 } from 'react-icons/md';
-import './TransactionsPage.css';
+import Receipt from '../components/Receipt';
+import PrintWrapper from '../components/PrintWrapper';
 
 const TransactionsPage = () => {
     const dispatch = useDispatch();
     const { transactions, status } = useSelector((state) => state.transactions);
     const { userProfile } = useSelector((state) => state.auth);
-    const { currency } = useSelector((state) => state.company);
+    const { currency, companyName } = useSelector((state) => state.company);
 
     const [filterType, setFilterType] = useState('');
     const [commentInputs, setCommentInputs] = useState({});
+    const [selectedTxForPrint, setSelectedTxTxForPrint] = useState(null);
 
     const canComment = userService.canPerformAction(userProfile?.role, 'ADD_COMMENT');
 
     useEffect(() => {
         dispatch(fetchTransactions());
     }, [dispatch]);
+
+    const handlePrint = (tx) => {
+        setSelectedTxTxForPrint(tx);
+        // Wait for state to update and React Portal to render before printing
+        setTimeout(() => {
+            window.print();
+        }, 800);
+    };
 
     const handleAddComment = async (transactionId) => {
         const text = commentInputs[transactionId]?.trim();
@@ -72,143 +83,185 @@ const TransactionsPage = () => {
     };
 
     return (
-        <div className="transactions-page">
+        <div className="container-fluid px-0">
             {/* Page Header with Stats */}
-            <div className="page-header">
-                <div className="page-header-content">
-                    <h1><MdHistory /> سجل المعاملات</h1>
-                    <p className="subtitle">جميع حركات الوارد والصادر</p>
+            <div className="row mb-4 align-items-center">
+                <div className="col-12 col-md-6 mb-3 mb-md-0">
+                    <h1 className="h3 mb-1"><MdHistory className="ms-1" /> سجل المعاملات</h1>
+                    <p className="text-muted mb-0 small">جميع حركات الوارد والصادر</p>
                 </div>
-
-                <div className="stats-summary">
-                    <div className="stat-card in">
-                        <div className="stat-icon">
-                            <MdArrowDownward />
+                <div className="col-12 col-md-6">
+                    <div className="row g-3">
+                        <div className="col-6">
+                            <div className="card border-0 shadow-sm bg-success-subtle">
+                                <div className="card-body py-2 px-3">
+                                    <div className="d-flex align-items-center gap-2">
+                                        <MdArrowDownward className="text-success fs-4" />
+                                        <div>
+                                            <div className="text-muted small">إجمالي الوارد</div>
+                                            <div className="fw-bold">{formatCurrency(totalInValue, currency)}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="stat-info">
-                            <span className="stat-label">إجمالي الوارد</span>
-                            <span className="stat-value">{formatCurrency(totalInValue, currency)}</span>
-                        </div>
-                    </div>
-                    <div className="stat-card out">
-                        <div className="stat-icon">
-                            <MdArrowUpward />
-                        </div>
-                        <div className="stat-info">
-                            <span className="stat-label">إجمالي الصادر</span>
-                            <span className="stat-value">{formatCurrency(totalOutValue, currency)}</span>
+                        <div className="col-6">
+                            <div className="card border-0 shadow-sm bg-danger-subtle">
+                                <div className="card-body py-2 px-3">
+                                    <div className="d-flex align-items-center gap-2">
+                                        <MdArrowUpward className="text-danger fs-4" />
+                                        <div>
+                                            <div className="text-muted small">إجمالي الصادر</div>
+                                            <div className="fw-bold">{formatCurrency(totalOutValue, currency)}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Filters */}
-            <div className="filters-bar">
-                <MdFilterList style={{ color: 'var(--text-light)', fontSize: '1.25rem' }} />
-                <div className="filter-chips">
-                    <button
-                        className={`filter-chip ${filterType === '' ? 'active' : ''}`}
-                        onClick={() => setFilterType('')}
-                    >
-                        الكل ({transactions.length})
-                    </button>
-                    <button
-                        className={`filter-chip in ${filterType === TRANSACTION_TYPES.STOCK_IN ? 'active' : ''}`}
-                        onClick={() => setFilterType(TRANSACTION_TYPES.STOCK_IN)}
-                    >
-                        <MdArrowDownward /> استلام ({stockInTxs.length})
-                    </button>
-                    <button
-                        className={`filter-chip out ${filterType === TRANSACTION_TYPES.STOCK_OUT ? 'active' : ''}`}
-                        onClick={() => setFilterType(TRANSACTION_TYPES.STOCK_OUT)}
-                    >
-                        <MdArrowUpward /> إخراج ({stockOutTxs.length})
-                    </button>
+            <div className="card border-0 shadow-sm mb-4">
+                <div className="card-body py-2 px-3 d-flex align-items-center gap-3">
+                    <MdFilterList className="text-muted fs-5" />
+                    <div className="btn-group btn-group-sm">
+                        <button
+                            className={`btn btn-outline-secondary ${filterType === '' ? 'active' : ''}`}
+                            onClick={() => setFilterType('')}
+                        >
+                            الكل ({transactions.length})
+                        </button>
+                        <button
+                            className={`btn btn-outline-success ${filterType === TRANSACTION_TYPES.STOCK_IN ? 'active' : ''}`}
+                            onClick={() => setFilterType(TRANSACTION_TYPES.STOCK_IN)}
+                        >
+                            <MdArrowDownward /> استلام ({stockInTxs.length})
+                        </button>
+                        <button
+                            className={`btn btn-outline-danger ${filterType === TRANSACTION_TYPES.STOCK_OUT ? 'active' : ''}`}
+                            onClick={() => setFilterType(TRANSACTION_TYPES.STOCK_OUT)}
+                        >
+                            <MdArrowUpward /> إخراج ({stockOutTxs.length})
+                        </button>
+                    </div>
                 </div>
             </div>
 
             {/* Transactions List */}
             {status === 'loading' ? (
-                <div className="loading-state">جاري التحميل...</div>
+                <div className="text-center py-5">
+                    <div className="spinner-border text-gold" role="status">
+                        <span className="visually-hidden">جاري التحميل...</span>
+                    </div>
+                </div>
             ) : filteredTransactions.length === 0 ? (
-                <div className="empty-state">
-                    <MdInbox />
-                    <p>لا توجد معاملات مسجلة</p>
+                <div className="card border-0 shadow-sm text-center py-5">
+                    <div className="card-body">
+                        <MdInbox className="display-1 text-muted mb-3" />
+                        <p className="h5 text-muted">لا توجد معاملات مسجلة</p>
+                    </div>
                 </div>
             ) : (
-                <div className="table-responsive shadow-sm">
-                    <table className="app-table">
-                        <thead>
-                            <tr>
-                                <th>التوقيت</th>
-                                <th>النوع</th>
-                                <th>الجهة</th>
-                                <th>العناصر</th>
-                                <th>الإجمالي</th>
-                                <th>بواسطة</th>
-                                <th>ملاحظات/تعليقات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredTransactions.map(tx => {
-                                const isStockIn = tx.type === TRANSACTION_TYPES.STOCK_IN;
-                                return (
-                                    <tr key={tx.id}>
-                                        <td className="col-time">{formatDate(tx.createdAt)}</td>
-                                        <td>
-                                            <span className={`badge ${isStockIn ? 'in' : 'out'}`}>
-                                                {isStockIn ? 'استلام' : 'إخراج'}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <strong>{isStockIn ? tx.supplierName : tx.customerName || 'غير محدد'}</strong>
-                                        </td>
-                                        <td>
-                                            <ul className="items-summary">
-                                                {tx.items?.map((item, idx) => (
-                                                    <li key={idx}>
-                                                        {item.productName} ({item.quantity})
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </td>
-                                        <td>
-                                            <strong className={isStockIn ? 'text-danger' : 'text-success'}>
-                                                {formatCurrency(
-                                                    fromCents(isStockIn ? tx.totalCostCents : tx.totalPriceCents),
-                                                    currency
-                                                )}
-                                            </strong>
-                                        </td>
-                                        <td>{tx.createdBy?.email}</td>
-                                        <td>
-                                            <div className="compact-comments">
-                                                {tx.notes && <p className="tx-note"><strong>ملاحظة:</strong> {tx.notes}</p>}
-                                                {tx.comments?.length > 0 && (
-                                                    <span className="comment-count">
-                                                        <MdComment /> {tx.comments.length}
-                                                    </span>
-                                                )}
-                                                {canComment && (
-                                                    <div className="mini-comment-form">
-                                                        <input 
-                                                            type="text" 
-                                                            placeholder="تعليق..."
-                                                            value={commentInputs[tx.id] || ''}
-                                                            onChange={(e) => setCommentInputs({...commentInputs, [tx.id]: e.target.value})}
-                                                            onKeyPress={(e) => e.key === 'Enter' && handleAddComment(tx.id)}
-                                                        />
-                                                        <button onClick={() => handleAddComment(tx.id)}><MdSend /></button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                <div className="card border-0 shadow-sm">
+                    <div className="table-responsive">
+                        <table className="table table-hover align-middle mb-0">
+                            <thead className="table-light">
+                                <tr>
+                                    <th>التوقيت</th>
+                                    <th>النوع</th>
+                                    <th>الجهة</th>
+                                    <th>العناصر</th>
+                                    <th>الإجمالي</th>
+                                    <th>بواسطة</th>
+                                    <th>ملاحظات/تعليقات</th>
+                                    <th className="text-center">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredTransactions.map(tx => {
+                                    const isStockIn = tx.type === TRANSACTION_TYPES.STOCK_IN;
+                                    return (
+                                        <tr key={tx.id}>
+                                            <td className="small text-muted">{formatDate(tx.createdAt)}</td>
+                                            <td>
+                                                <span className={`badge ${isStockIn ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} border`}>
+                                                    {isStockIn ? 'استلام' : 'إخراج'}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div className="fw-bold">{isStockIn ? tx.supplierName : tx.customerName || 'غير محدد'}</div>
+                                            </td>
+                                            <td>
+                                                <ul className="list-unstyled mb-0 small">
+                                                    {tx.items?.map((item, idx) => (
+                                                        <li key={idx} className="text-nowrap">
+                                                            • {item.productName} ({item.quantity})
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </td>
+                                            <td>
+                                                <div className={`fw-bold ${isStockIn ? 'text-danger' : 'text-success'}`}>
+                                                    {formatCurrency(
+                                                        fromCents(isStockIn ? tx.totalCostCents : tx.totalPriceCents),
+                                                        currency
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="small">{tx.createdBy?.email?.split('@')[0]}</td>
+                                            <td>
+                                                <div className="compact-comments">
+                                                    {tx.notes && <p className="mb-1 small"><strong>ملاحظة:</strong> {tx.notes}</p>}
+                                                    {tx.comments?.length > 0 && (
+                                                        <div className="mb-1">
+                                                            <span className="badge bg-light text-dark border">
+                                                                <MdComment /> {tx.comments.length} تعليقات
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {canComment && (
+                                                        <div className="input-group input-group-sm mt-1" style={{ maxWidth: '200px' }}>
+                                                            <input
+                                                                type="text"
+                                                                className="form-control form-control-sm"
+                                                                placeholder="تعليق..."
+                                                                value={commentInputs[tx.id] || ''}
+                                                                onChange={(e) => setCommentInputs({ ...commentInputs, [tx.id]: e.target.value })}
+                                                                onKeyPress={(e) => e.key === 'Enter' && handleAddComment(tx.id)}
+                                                            />
+                                                            <button className="btn btn-outline-gold" onClick={() => handleAddComment(tx.id)}><MdSend /></button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="text-center">
+                                                <button
+                                                    className="btn btn-outline-secondary btn-sm"
+                                                    onClick={() => handlePrint(tx)}
+                                                    title="طباعة الإيصال"
+                                                >
+                                                    <MdPrint />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+            )}
+
+            {/* Hidden Printable Area */}
+            {selectedTxForPrint && (
+                <PrintWrapper>
+                    <Receipt
+                        transaction={selectedTxForPrint}
+                        company={{ companyName: companyName || 'الأسد الذهبي', currency }}
+                    />
+                </PrintWrapper>
             )}
         </div>
     );

@@ -2,6 +2,7 @@ import { db, auth } from './firebaseConfig';
 import {
     collection,
     getDocs,
+    getDoc,
     addDoc,
     updateDoc,
     deleteDoc,
@@ -11,6 +12,8 @@ import {
     where
 } from 'firebase/firestore';
 import { COLLECTIONS } from '../utils/constants';
+import { serializeFirestoreData } from '../utils/serialization';
+import { auditService } from './auditService';
 
 /**
  * Customer Service - Manages shop/customer CRUD operations
@@ -22,10 +25,11 @@ export const customerService = {
      */
     getAllCustomers: async () => {
         const querySnapshot = await getDocs(collection(db, COLLECTIONS.CUSTOMERS));
-        return querySnapshot.docs.map(doc => ({
+        const customers = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
+        return serializeFirestoreData(customers);
     },
 
     /**
@@ -48,7 +52,7 @@ export const customerService = {
      */
     addCustomer: async (customerData) => {
         const user = auth.currentUser;
-        const docRef = await addDoc(collection(db, COLLECTIONS.CUSTOMERS), {
+        const newDoc = {
             ...customerData,
             isActive: true,
             createdAt: serverTimestamp(),
@@ -56,12 +60,21 @@ export const customerService = {
                 uid: user?.uid || 'system',
                 email: user?.email || 'system'
             }
-        });
-        return {
+        };
+        const docRef = await addDoc(collection(db, COLLECTIONS.CUSTOMERS), newDoc);
+        
+        await auditService.logAction(
+            'ADD_CUSTOMER',
+            docRef.id,
+            customerData.name,
+            { newValue: customerData }
+        );
+
+        return serializeFirestoreData({
             id: docRef.id,
             ...customerData,
             isActive: true
-        };
+        });
     },
 
     /**
@@ -69,11 +82,23 @@ export const customerService = {
      */
     updateCustomer: async (id, customerData) => {
         const customerRef = doc(db, COLLECTIONS.CUSTOMERS, id);
+        
+        const oldDoc = await getDoc(customerRef);
+        const oldData = oldDoc.data();
+
         await updateDoc(customerRef, {
             ...customerData,
             updatedAt: serverTimestamp()
         });
-        return { id, ...customerData };
+
+        await auditService.logAction(
+            'UPDATE_CUSTOMER',
+            id,
+            customerData.name || oldData.name,
+            { oldValue: oldData, newValue: customerData }
+        );
+
+        return serializeFirestoreData({ id, ...customerData });
     },
 
     /**
@@ -92,7 +117,19 @@ export const customerService = {
      * Hard delete customer
      */
     deleteCustomer: async (id) => {
-        await deleteDoc(doc(db, COLLECTIONS.CUSTOMERS, id));
+        const customerRef = doc(db, COLLECTIONS.CUSTOMERS, id);
+        const oldDoc = await getDoc(customerRef);
+        const oldData = oldDoc.data();
+
+        await deleteDoc(customerRef);
+
+        await auditService.logAction(
+            'DELETE_CUSTOMER',
+            id,
+            oldData?.name || 'Unknown',
+            { oldValue: oldData }
+        );
+
         return id;
     }
 };

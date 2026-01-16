@@ -6,9 +6,10 @@ import {
   MdEdit,
   MdDelete,
   MdPerson,
-  MdInbox
+  MdInbox,
+  MdDownload
 } from 'react-icons/md';
-import './AuditLogsPage.css';
+import { exportToCSV } from '../utils/csvExport';
 
 const AuditLogsPage = () => {
   const [logs, setLogs] = useState([]);
@@ -117,67 +118,100 @@ const AuditLogsPage = () => {
   const updateCount = logs.filter(l => l.action?.startsWith('UPDATE_')).length;
   const deleteCount = logs.filter(l => l.action?.startsWith('DELETE_')).length;
 
+  const handleExport = () => {
+    const headers = ['timestamp', 'action', 'entityName', 'userEmail', 'details'];
+    exportToCSV(logs, 'audit_logs', headers);
+  };
+
   return (
-    <div className="audit-page">
-      <div className="page-header">
-        <div className="page-header-content">
-          <h1><MdHistory /> سجل التعديلات</h1>
-          <p className="subtitle">مراقبة كافة التغييرات والعمليات داخل النظام</p>
+    <div className="container-fluid px-0">
+      <div className="row mb-4 align-items-center">
+        <div className="col-12 col-md-6 mb-3 mb-md-0">
+          <h1 className="h3 mb-1"><MdHistory className="ms-1" /> سجل التعديلات</h1>
+          <p className="text-muted mb-0 small">مراقبة كافة التغييرات والعمليات داخل النظام</p>
         </div>
 
-        <div className="audit-stats">
-          <div className="stat-chip add">
-            <MdAdd /> {addCount} إضافة
-          </div>
-          <div className="stat-chip update">
-            <MdEdit /> {updateCount} تحديث
-          </div>
-          <div className="stat-chip delete">
-            <MdDelete /> {deleteCount} حذف
+        <div className="col-12 col-md-6">
+          <div className="d-flex justify-content-md-end align-items-center gap-3">
+            <button 
+              className="btn btn-outline-gold btn-sm d-flex align-items-center gap-2"
+              onClick={handleExport}
+              disabled={logs.length === 0}
+            >
+              <MdDownload /> تصدير CSV
+            </button>
+            <div className="d-flex gap-2">
+              <div className="badge bg-success-subtle text-success border px-3 py-2">
+                <MdAdd /> {addCount} إضافة
+              </div>
+              <div className="badge bg-warning-subtle text-warning border px-3 py-2">
+                <MdEdit /> {updateCount} تحديث
+              </div>
+              <div className="badge bg-danger-subtle text-danger border px-3 py-2">
+                <MdDelete /> {deleteCount} حذف
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {loading ? (
-        <div className="loading">جاري تحميل السجل...</div>
+        <div className="text-center py-5">
+          <div className="spinner-border text-gold" role="status">
+            <span className="visually-hidden">جاري التحميل...</span>
+          </div>
+        </div>
       ) : logs.length === 0 ? (
-        <div className="empty-state">
-          <MdInbox />
-          <p>لا توجد سجلات حالياً</p>
+        <div className="card border-0 shadow-sm text-center py-5">
+          <div className="card-body">
+            <MdInbox className="display-1 text-muted mb-3" />
+            <p className="h5 text-muted">لا توجد سجلات حالياً</p>
+          </div>
         </div>
       ) : (
-        <div className="logs-container">
-          {logs.map((log) => {
-            const actionType = getActionType(log.action);
-            const timestamp = formatTimestamp(log.timestamp);
+        <div className="card border-0 shadow-sm">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th>التوقيت</th>
+                  <th>العملية</th>
+                  <th>العنصر</th>
+                  <th>التفاصيل</th>
+                  <th>بواسطة</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log) => {
+                  const actionType = getActionType(log.action);
+                  const timestamp = formatTimestamp(log.timestamp);
 
-            return (
-              <div key={log.id} className="log-item">
-                <div className={`log-icon ${actionType}`}>
-                  {getActionIcon(log.action)}
-                </div>
-
-                <div className="log-content">
-                  <div className="log-header">
-                    <span className="log-action">{translateAction(log.action)}</span>
-                    <span className="log-entity">{log.entityName}</span>
-                    <span className="log-user">
-                      <MdPerson /> {log.userEmail}
-                    </span>
-                  </div>
-
-                  <div className="log-details">
-                    {renderDetails(log.details, log.action)}
-                  </div>
-                </div>
-
-                <div className="log-time">
-                  <div className="log-date">{timestamp.date}</div>
-                  <div className="log-clock">{timestamp.time}</div>
-                </div>
-              </div>
-            );
-          })}
+                  return (
+                    <tr key={log.id}>
+                      <td className="small text-muted text-nowrap">
+                        <div>{timestamp.date}</div>
+                        <div>{timestamp.time}</div>
+                      </td>
+                      <td>
+                        <span className={`badge bg-${actionType === 'add' ? 'success' : actionType === 'delete' ? 'danger' : 'warning'}-subtle text-${actionType === 'add' ? 'success' : actionType === 'delete' ? 'danger' : 'warning'} border`}>
+                          {getActionIcon(log.action)} {translateAction(log.action)}
+                        </span>
+                      </td>
+                      <td className="fw-bold">{log.entityName}</td>
+                      <td>
+                        <div className="small">
+                          {renderDetails(log.details, log.action)}
+                        </div>
+                      </td>
+                      <td className="small">
+                        <MdPerson className="me-1" /> {log.userEmail?.split('@')[0]}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

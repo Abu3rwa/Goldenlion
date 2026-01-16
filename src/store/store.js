@@ -15,4 +15,22 @@ export const store = configureStore({
     customers: customersReducer,
     transactions: transactionsReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        // Ignore these paths in state as they may contain complex data from Firestore
+        // while we migrate to full serialization in services.
+        ignoredPaths: [
+          'auth.user', 
+          'products.products.lastRestockAt',
+          'transactions.transactions.createdAt'
+        ],
+        // Ignore these actions as they may carry non-serializable payloads
+        ignoredActions: [
+          'products/fetchProducts/fulfilled',
+          'transactions/fetchTransactions/fulfilled',
+          'auth/setUserProfile'
+        ],
+      },
+    }),
 });

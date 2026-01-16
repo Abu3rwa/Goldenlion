@@ -1,5 +1,6 @@
 import { db, auth } from './firebaseConfig';
 import { collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from 'firebase/firestore';
+import { serializeFirestoreData } from '../utils/serialization';
 
 export const auditService = {
   /**
@@ -25,7 +26,7 @@ export const auditService = {
         userEmail,
         timestamp: serverTimestamp()
       });
-      
+
     } catch (error) {
       console.error("Critical Error: Failed to write audit log", error);
       // In a real P0 scenario, we might want to halt the operation if logging fails, 
@@ -40,15 +41,16 @@ export const auditService = {
   getLogs: async (maxLimit = 50) => {
     try {
       const q = query(
-        collection(db, 'audit_logs'), 
-        orderBy('timestamp', 'desc'), 
+        collection(db, 'audit_logs'),
+        orderBy('timestamp', 'desc'),
         limit(maxLimit)
       );
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      const logs = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
+      return serializeFirestoreData(logs);
     } catch (error) {
       console.error("Error fetching audit logs", error);
       return [];

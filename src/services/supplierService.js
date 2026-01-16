@@ -8,7 +8,8 @@ export const supplierService = {
   getAllSuppliers: async () => {
     try {
       const data = await getDocs(suppliersCollectionRef);
-      return data.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+      const suppliers = data.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+      return serializeFirestoreData(suppliers);
     } catch (error) {
       console.error("Error fetching suppliers:", error);
       throw error;
@@ -18,6 +19,7 @@ export const supplierService = {
   addSupplier: async (supplier) => {
     try {
       const docRef = await addDoc(suppliersCollectionRef, supplier);
+      const newSupplier = { ...supplier, id: docRef.id };
       
       await auditService.logAction(
         'ADD_SUPPLIER',
@@ -26,7 +28,7 @@ export const supplierService = {
         { newValue: supplier }
       );
 
-      return { ...supplier, id: docRef.id };
+      return serializeFirestoreData(newSupplier);
     } catch (error) {
       console.error("Error adding supplier:", error);
       throw error;
@@ -49,7 +51,7 @@ export const supplierService = {
         { oldValue: oldData, newValue: updatedSupplier }
       );
 
-      return { ...updatedSupplier, id };
+      return serializeFirestoreData({ ...updatedSupplier, id });
     } catch (error) {
       console.error("Error updating supplier:", error);
       throw error;

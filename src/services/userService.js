@@ -9,6 +9,7 @@ import {
     serverTimestamp
 } from 'firebase/firestore';
 import { COLLECTIONS, USER_ROLES } from '../utils/constants';
+import { serializeFirestoreData } from '../utils/serialization';
 
 /**
  * User Service - Manages user profiles and roles
@@ -22,7 +23,7 @@ export const userService = {
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists()) {
-            return { id: userSnap.id, ...userSnap.data() };
+            return serializeFirestoreData({ id: userSnap.id, ...userSnap.data() });
         }
         return null;
     },
@@ -39,14 +40,20 @@ export const userService = {
         if (!userSnap.exists()) {
             // First time user - create profile with assigned role from invite or default
             const role = assignedRole || USER_ROLES.STAFF;
-            await setDoc(userRef, {
+            const newUserProfile = {
                 email: user.email,
                 displayName: user.displayName || user.email,
                 role: role,
                 isActive: true,
                 createdAt: serverTimestamp(),
                 lastLoginAt: serverTimestamp()
-            });
+            };
+            await setDoc(userRef, newUserProfile);
+            // We return the raw object here because serverTimestamp hasn't resolved to a date yet in the local object,
+            // but we want to return something serializable or at least consistent.
+            // Ideally we'd fetch it back, but optimization: just return what we know.
+            // serverTimestamp() is NOT serializable, so we can't return it directly to Redux if we constructed it here.
+            // We should strip timestamps or use current date for local state.
             return {
                 id: user.uid,
                 email: user.email,
@@ -58,7 +65,7 @@ export const userService = {
             await updateDoc(userRef, {
                 lastLoginAt: serverTimestamp()
             });
-            return { id: userSnap.id, ...userSnap.data() };
+            return serializeFirestoreData({ id: userSnap.id, ...userSnap.data() });
         }
     },
 
@@ -67,10 +74,11 @@ export const userService = {
      */
     getAllUsers: async () => {
         const querySnapshot = await getDocs(collection(db, COLLECTIONS.USERS));
-        return querySnapshot.docs.map(doc => ({
+        const users = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
+        return serializeFirestoreData(users);
     },
 
     /**

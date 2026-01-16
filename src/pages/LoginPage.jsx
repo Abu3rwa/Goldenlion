@@ -80,80 +80,88 @@ const LoginPage = () => {
   const displayError = validationError || error;
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <GiLion className="login-icon" />
-        <h2>الأسد الذهبي</h2>
-        <p>نظام إدارة المخزون</p>
-
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
-            <input
-              type="email"
-              placeholder="البريد الإلكتروني"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="login-input"
-            />
+    <div className="login-page d-flex justify-content-center align-items-center min-vh-100 bg-light">
+      <div className="card shadow border-0" style={{ width: '100%', maxWidth: '400px' }}>
+        <div className="card-body p-4 text-center">
+          <div className="text-gold mb-3" style={{ fontSize: '4rem' }}>
+            <GiLion />
           </div>
-          <div className="form-group">
-            <input
-              type="password"
-              placeholder="كلمة المرور"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="login-input"
-            />
-          </div>
+          <h2 className="card-title fw-bold text-dark mb-1">الأسد الذهبي</h2>
+          <p className="text-muted mb-4">نظام إدارة المخزون</p>
 
-          {/* Invite Code - Only for Registration */}
-          {isRegistering && (
-            <div className="form-group invite-code-group">
-              <div className="invite-code-label">
-                <MdVpnKey />
-                <span>رمز الدعوة</span>
-              </div>
+          <form onSubmit={handleSubmit} className="text-end">
+            <div className="mb-3">
               <input
-                type="text"
-                placeholder="أدخل رمز الدعوة المكون من 8 أحرف"
-                value={inviteCode}
-                onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                type="email"
+                className="form-control form-control-lg"
+                placeholder="البريد الإلكتروني"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                className="login-input invite-input"
-                maxLength={8}
               />
-              <small className="invite-hint">
-                تحتاج إلى رمز دعوة من مالك النظام للتسجيل (صالح لمدة 7 أيام)
-              </small>
             </div>
-          )}
+            <div className="mb-3">
+              <input
+                type="password"
+                className="form-control form-control-lg"
+                placeholder="كلمة المرور"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* Invite Code - Only for Registration */}
+            {isRegistering && (
+              <div className="mb-3">
+                <label className="form-label d-flex align-items-center gap-2 text-gold fw-bold">
+                  <MdVpnKey />
+                  <span>رمز الدعوة</span>
+                </label>
+                <input
+                  type="text"
+                  className="form-control form-control-lg text-uppercase"
+                  placeholder="أدخل رمز الدعوة"
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                  required
+                  maxLength={8}
+                />
+                <div className="form-text text-muted small mt-1">
+                  تحتاج إلى رمز دعوة من مالك النظام للتسجيل (صالح لمدة 7 أيام)
+                </div>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn btn-gold w-100 py-2 fs-5 mb-3"
+              disabled={status === 'loading' || isValidating}
+            >
+              {(status === 'loading' || isValidating) ? (
+                isRegistering ? 'جاري التحقق والتسجيل...' : 'جاري تسجيل الدخول...'
+              ) : (
+                isRegistering ? 'تسجيل حساب جديد' : 'تسجيل الدخول'
+              )}
+            </button>
+          </form>
 
           <button
-            type="submit"
-            className="login-btn"
-            disabled={status === 'loading' || isValidating}
+            className="btn btn-link text-decoration-none text-gold"
+            onClick={() => {
+              setIsRegistering(!isRegistering);
+              setValidationError('');
+            }}
           >
-            {(status === 'loading' || isValidating) ? (
-              isRegistering ? 'جاري التحقق والتسجيل...' : 'جاري تسجيل الدخول...'
-            ) : (
-              isRegistering ? 'تسجيل حساب جديد' : 'تسجيل الدخول'
-            )}
+            {isRegistering ? 'لديك حساب بالفعل؟ تسجيل الدخول' : 'لديك رمز دعوة؟ تسجيل حساب جديد'}
           </button>
-        </form>
 
-        <button
-          className="toggle-btn"
-          onClick={() => {
-            setIsRegistering(!isRegistering);
-            setValidationError('');
-          }}
-        >
-          {isRegistering ? 'لديك حساب بالفعل؟ تسجيل الدخول' : 'لديك رمز دعوة؟ تسجيل حساب جديد'}
-        </button>
-
-        {displayError && <p className="error-msg">{displayError}</p>}
+          {displayError && (
+            <div className="alert alert-danger mt-3 mb-0 py-2 small">
+              {displayError}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
