@@ -4,9 +4,10 @@ import { fetchProducts, removeProduct } from '../store/productsSlice';
 import { fetchSuppliers } from '../store/suppliersSlice';
 import { Link } from 'react-router-dom';
 import { MdEdit, MdDelete } from 'react-icons/md';
+import { formatCurrency } from '../utils/currency';
 import './ProductList.css';
 
-const ProductList = () => {
+const ProductList = ({ currency }) => {
   const dispatch = useDispatch();
   const { products, status, error } = useSelector((state) => state.products);
   const { suppliers } = useSelector((state) => state.suppliers);
@@ -64,8 +65,8 @@ const ProductList = () => {
               <td><span className="supplier-tag">{getSupplierName(product.supplierId)}</span></td>
               <td>{getStockStatus(product.quantity)}</td>
               <td>{product.quantity}</td>
-              <td className="cost-val">${product.costPrice?.toFixed(2) || '0.00'}</td>
-              <td className="price-val">${product.price.toFixed(2)}</td>
+              <td className="cost-val">{formatCurrency(product.costPrice, currency)}</td>
+              <td className="price-val">{formatCurrency(product.price, currency)}</td>
               <td>
                   <Link to={`/edit/${product.id}`} className="action-btn edit-btn">
                     <MdEdit /> تعديل

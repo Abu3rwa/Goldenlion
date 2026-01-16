@@ -1,10 +1,12 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { FaBoxOpen, FaDollarSign, FaCoins, FaChartLine } from 'react-icons/fa';
+import { formatCurrency } from '../utils/currency';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const products = useSelector((state) => state.products.products);
+  const { products, status } = useSelector((state) => state.products);
+  const { currency } = useSelector((state) => state.company);
 
   const totalItems = products.reduce((total, product) => total + product.quantity, 0);
   
@@ -21,9 +23,9 @@ const Dashboard = () => {
 
   const potentialProfit = totalSalesValue - totalCost;
 
-  const formatCurrency = (amount) => {
-    return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
+  if (status === 'loading') {
+    return <div style={{ textAlign: 'center', marginTop: '50px' }}>Loading dashboard...</div>;
+  }
 
   return (
     <div className="dashboard-metrics">
@@ -41,9 +43,9 @@ const Dashboard = () => {
         <div className="metric-icon" style={{color: '#E74C3C', backgroundColor: 'rgba(231, 76, 60, 0.1)'}}>
           <FaCoins />
         </div>
-        <div className="metric-content">
+        <div className="metric-.content">
           <h4>رأس المال (التكلفة)</h4>
-          <p>${formatCurrency(totalCost)}</p>
+          <p>{formatCurrency(totalCost, currency)}</p>
         </div>
       </div>
 
@@ -53,7 +55,7 @@ const Dashboard = () => {
         </div>
         <div className="metric-content">
           <h4>القيمة السوقية (البيع)</h4>
-          <p>${formatCurrency(totalSalesValue)}</p>
+          <p>{formatCurrency(totalSalesValue, currency)}</p>
         </div>
       </div>
 
@@ -63,7 +65,7 @@ const Dashboard = () => {
         </div>
         <div className="metric-content">
           <h4>الأرباح المتوقعة</h4>
-          <p>${formatCurrency(potentialProfit)}</p>
+          <p>{formatCurrency(potentialProfit, currency)}</p>
         </div>
       </div>
     </div>

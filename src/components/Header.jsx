@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../store/authSlice';
 import { GiLion } from 'react-icons/gi';
-import { MdDashboard, MdAddBox, MdLogout, MdHistory, MdPeople } from 'react-icons/md';
+import { MdDashboard, MdAddBox, MdLogout, MdHistory, MdPeople, MdSettings } from 'react-icons/md';
 import './Header.css';
 
 const Header = () => {
@@ -38,6 +38,9 @@ const Header = () => {
               </Link>
               <Link to="/audit" className={`nav-link ${isActive('/audit')}`}>
                 <MdHistory /> السجل
+              </Link>
+              <Link to="/settings" className={`nav-link ${isActive('/settings')}`}>
+                <MdSettings /> الإعدادات
               </Link>
               <div className="user-info">
                 <span className="user-name">مرحباً، {user.displayName || 'المستخدم'}</span>

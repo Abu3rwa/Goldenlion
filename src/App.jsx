@@ -4,6 +4,9 @@ import { useDispatch } from 'react-redux';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './services/firebaseConfig';
 import { setUser, clearUser } from './store/authSlice';
+import { setCompanySettings } from './store/companySlice';
+import { companyService } from './services/companyService';
+import { fetchProducts } from './store/productsSlice';
 
 import Header from './components/Header';
 import DashboardPage from './pages/DashboardPage';
@@ -11,6 +14,7 @@ import AddProductPage from './pages/AddProductPage';
 import EditProductPage from './pages/EditProductPage';
 import AuditLogsPage from './pages/AuditLogsPage';
 import SuppliersPage from './pages/SuppliersPage';
+import CompanySettingsPage from './pages/CompanySettingsPage';
 import LoginPage from './pages/LoginPage';
 import PrivateRoute from './components/PrivateRoute';
 import './App.css';
@@ -35,6 +39,13 @@ function App() {
     });
 
     return () => unsubscribe();
+  }, [dispatch]);
+
+  useEffect(() => {
+    companyService.getCompanySettings().then(settings => {
+      dispatch(setCompanySettings(settings));
+    });
+    dispatch(fetchProducts());
   }, [dispatch]);
 
   if (loading) {
@@ -85,6 +96,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <SuppliersPage />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <PrivateRoute>
+                  <CompanySettingsPage />
                 </PrivateRoute>
               } 
             />
