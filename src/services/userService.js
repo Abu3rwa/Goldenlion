@@ -133,6 +133,12 @@ export const userService = {
 
             // Costs visibility
             VIEW_COSTS: [USER_ROLES.ACCOUNTANT, USER_ROLES.OWNER],
+
+            // ===== PUBLIC STORE (Sales Manager) =====
+            MANAGE_PUBLIC_PRODUCTS: [USER_ROLES.SALES_MANAGER, USER_ROLES.OWNER],
+            MANAGE_PUBLIC_ORDERS: [USER_ROLES.SALES_MANAGER, USER_ROLES.OWNER],
+            MANAGE_DELIVERY_CITIES: [USER_ROLES.SALES_MANAGER, USER_ROLES.OWNER],
+            VIEW_STORE_DASHBOARD: [USER_ROLES.SALES_MANAGER, USER_ROLES.OWNER],
         };
 
         return permissions[action]?.includes(userRole) || false;

@@ -32,6 +32,14 @@ service cloud.firestore {
       return isOwner() || isAccountant();
     }
     
+    function isSalesManager() {
+      return isAuthenticated() && getUserRole() == 'sales_manager';
+    }
+    
+    function isSalesManagerOrOwner() {
+      return isOwner() || isSalesManager();
+    }
+    
     // ===== Users Collection =====
     match /users/{userId} {
       // Anyone authenticated can read user profiles
@@ -122,6 +130,49 @@ service cloud.firestore {
     match /settings/{docId} {
       allow read: if isAuthenticated();
       allow write: if isOwner();
+    }
+    
+    // ============================================
+    // ===== PUBLIC E-COMMERCE COLLECTIONS =====
+    // ============================================
+    
+    // ===== Public Products =====
+    match /publicProducts/{productId} {
+      // Anyone can read public products (no auth required for storefront)
+      allow read: if true;
+      
+      // Only sales_manager or owner can manage
+      allow create, update, delete: if isSalesManagerOrOwner();
+    }
+    
+    // ===== Public Categories =====
+    match /publicCategories/{categoryId} {
+      // Anyone can read categories
+      allow read: if true;
+      
+      // Only sales_manager or owner can manage
+      allow create, update, delete: if isSalesManagerOrOwner();
+    }
+    
+    // ===== Public Orders =====
+    match /publicOrders/{orderId} {
+      // Anyone can create an order (anonymous checkout)
+      allow create: if true;
+      
+      // Sales manager and owner can read and update orders
+      allow read, update: if isSalesManagerOrOwner();
+      
+      // Orders cannot be deleted
+      allow delete: if false;
+    }
+    
+    // ===== Delivery Cities =====
+    match /deliveryCities/{cityId} {
+      // Anyone can read cities (needed for checkout)
+      allow read: if true;
+      
+      // Only sales_manager or owner can manage
+      allow create, update, delete: if isSalesManagerOrOwner();
     }
   }
 }

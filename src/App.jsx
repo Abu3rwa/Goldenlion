@@ -24,6 +24,12 @@ import TransactionsPage from './pages/TransactionsPage';
 import UsersPage from './pages/UsersPage';
 import CategoriesPage from './pages/CategoriesPage';
 import PrivateRoute from './components/PrivateRoute';
+// Store Management Pages
+import StoreDashboard from './pages/admin/store/StoreDashboard';
+import StoreProducts from './pages/admin/store/StoreProducts';
+import StoreProductForm from './pages/admin/store/StoreProductForm';
+import StoreCities from './pages/admin/store/StoreCities';
+import StoreOrders from './pages/admin/store/StoreOrders';
 import './App.css';
 
 function App() {
@@ -175,6 +181,56 @@ function App() {
               element={
                 <PrivateRoute>
                   <CompanySettingsPage />
+                </PrivateRoute>
+              }
+            />
+
+            {/* ===== STORE MANAGEMENT ROUTES ===== */}
+            <Route
+              path="/admin/store"
+              element={
+                <PrivateRoute requiredPermission="VIEW_STORE_DASHBOARD">
+                  <StoreDashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/store/products"
+              element={
+                <PrivateRoute requiredPermission="MANAGE_PUBLIC_PRODUCTS">
+                  <StoreProducts />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/store/products/new"
+              element={
+                <PrivateRoute requiredPermission="MANAGE_PUBLIC_PRODUCTS">
+                  <StoreProductForm />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/store/products/:id/edit"
+              element={
+                <PrivateRoute requiredPermission="MANAGE_PUBLIC_PRODUCTS">
+                  <StoreProductForm />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/store/orders"
+              element={
+                <PrivateRoute requiredPermission="MANAGE_PUBLIC_ORDERS">
+                  <StoreOrders />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/store/cities"
+              element={
+                <PrivateRoute requiredPermission="MANAGE_DELIVERY_CITIES">
+                  <StoreCities />
                 </PrivateRoute>
               }
             />

@@ -1,0 +1,53 @@
+.store-dashboard .stat-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.store-dashboard .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.store-dashboard .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.store-dashboard .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    line-height: 1.2;
+}
+
+.store-dashboard .stat-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.store-dashboard .action-card {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.store-dashboard .action-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(212, 175, 55, 0.15) !important;
+    border: 1px solid rgba(212, 175, 55, 0.3) !important;
+}
+
+.store-dashboard .action-card h5 {
+    color: #1a1a2e;
+}
+
+.bg-gold {
+    background-color: rgba(212, 175, 55, 0.1);
+}
+
+.text-gold {
+    color: #D4AF37 !important;
+}

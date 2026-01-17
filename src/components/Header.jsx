@@ -22,7 +22,8 @@ import {
   MdSupervisorAccount,
   MdDescription,
   MdPictureAsPdf,
-  MdCategory
+  MdCategory,
+  MdShoppingCart
 } from 'react-icons/md';
 
 const Header = () => {
@@ -67,12 +68,14 @@ const Header = () => {
   const canCreateTransaction = userService.canPerformAction(userProfile?.role, 'CREATE_TRANSACTION');
   const canViewAllPages = userService.canPerformAction(userProfile?.role, 'VIEW_ALL_PAGES');
   const canManageUsers = userService.canPerformAction(userProfile?.role, 'MANAGE_USERS');
+  const canViewStore = userService.canPerformAction(userProfile?.role, 'VIEW_STORE_DASHBOARD');
 
   const getRoleLabel = (role) => {
     switch (role) {
       case 'owner': return 'المالك';
       case 'accountant': return 'المحاسب';
       case 'staff': return 'موظف';
+      case 'sales_manager': return 'مدير المبيعات';
       default: return role;
     }
   };
@@ -225,6 +228,15 @@ const Header = () => {
                 </ul>
               </li>
 
+              {/* Store Management */}
+              {canViewStore && (
+                <li className="nav-item">
+                  <Link to="/admin/store" className={`nav-link ${isActive('/admin/store')}`}>
+                    <MdShoppingCart className="ms-1" /> المتجر
+                  </Link>
+                </li>
+              )}
+
               {/* User Management */}
               {canManageUsers && (
                 <li className="nav-item">
@@ -355,6 +367,17 @@ const Header = () => {
                     <MdHistory /> سجل النظام
                   </Link>
                 </li>
+
+                {canViewStore && (
+                  <>
+                    <li className="sidebar-section-title">إدارة المتجر</li>
+                    <li className="sidebar-item">
+                      <Link to="/admin/store" className={`sidebar-link ${isActive('/admin/store')}`} onClick={closeMenu}>
+                        <MdShoppingCart /> لوحة المتجر
+                      </Link>
+                    </li>
+                  </>
+                )}
 
                 {canManageUsers && (
                   <li className="sidebar-item">

@@ -6,9 +6,15 @@ import companyReducer from './companySlice';
 import customersReducer from './customersSlice';
 import transactionsReducer from './transactionsSlice';
 import categoriesReducer from './categoriesSlice';
+// Public Store
+import publicProductsReducer from './publicProductsSlice';
+import publicOrdersReducer from './publicOrdersSlice';
+import deliveryCitiesReducer from './deliveryCitiesSlice';
+import cartReducer from './cartSlice';
 
 export const store = configureStore({
   reducer: {
+    // Internal Inventory
     products: productsReducer,
     auth: authReducer,
     suppliers: suppliersReducer,
@@ -16,6 +22,11 @@ export const store = configureStore({
     customers: customersReducer,
     transactions: transactionsReducer,
     categories: categoriesReducer,
+    // Public Store
+    publicProducts: publicProductsReducer,
+    publicOrders: publicOrdersReducer,
+    deliveryCities: deliveryCitiesReducer,
+    cart: cartReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
