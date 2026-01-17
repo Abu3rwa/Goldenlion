@@ -10,6 +10,8 @@
   --text-light: #6C757D;
   --danger: #E74C3C;
   --success: #2ECC71;
+  --radius: 8px;
+  --container-width: 1400px;
 }
 
 body {
@@ -151,17 +153,21 @@ body {
 /* RTL Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: rgba(0, 0, 0, 0.05);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 4px;
+  background: linear-gradient(180deg, var(--primary-gold), #B8860B);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-gold);
+  background: var(--primary-gold-hover);
+  background-clip: content-box;
 }

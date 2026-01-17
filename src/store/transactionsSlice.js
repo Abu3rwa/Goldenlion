@@ -53,6 +53,17 @@ export const addTransactionComment = createAsyncThunk(
     }
 );
 
+export const updateTransactionReceiptUrl = createAsyncThunk(
+    'transactions/updateReceiptUrl',
+    async ({ transactionId, receiptUrl }, { rejectWithValue }) => {
+        try {
+            return await transactionService.updateReceiptUrl(transactionId, receiptUrl);
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
 const transactionsSlice = createSlice({
     name: 'transactions',
     initialState,
@@ -110,6 +121,14 @@ const transactionsSlice = createSlice({
                 const tx = state.transactions.find(t => t.id === transactionId);
                 if (tx) {
                     tx.comments = [...(tx.comments || []), comment];
+                }
+            })
+            // Update receipt URL
+            .addCase(updateTransactionReceiptUrl.fulfilled, (state, action) => {
+                const { transactionId, receiptUrl } = action.payload;
+                const tx = state.transactions.find(t => t.id === transactionId);
+                if (tx) {
+                    tx.receiptUrl = receiptUrl;
                 }
             });
     },

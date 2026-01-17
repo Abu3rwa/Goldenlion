@@ -276,5 +276,16 @@ export const transactionService = {
         });
 
         return serializeFirestoreData(comment);
+    },
+
+    /**
+     * Update the PDF receipt URL for a transaction
+     */
+    updateReceiptUrl: async (transactionId, downloadUrl) => {
+        const txRef = doc(db, COLLECTIONS.TRANSACTIONS, transactionId);
+        await updateDoc(txRef, {
+            receiptUrl: downloadUrl
+        });
+        return { transactionId, receiptUrl: downloadUrl };
     }
 };
