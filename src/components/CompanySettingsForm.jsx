@@ -10,6 +10,7 @@ const CompanySettingsForm = () => {
   const companySettings = useSelector((state) => state.company);
 
   const [companyName, setCompanyName] = useState(companySettings.companyName || '');
+  const [companyNameEn, setCompanyNameEn] = useState(companySettings.companyNameEn || '');
   const [currency, setCurrency] = useState(companySettings.currency || 'د.ل');
   const [language, setLanguage] = useState(companySettings.language || 'ar');
   const [address, setAddress] = useState(companySettings.address || '');
@@ -20,6 +21,7 @@ const CompanySettingsForm = () => {
 
   useEffect(() => {
     setCompanyName(companySettings.companyName || '');
+    setCompanyNameEn(companySettings.companyNameEn || '');
     setCurrency(companySettings.currency || 'د.ل');
     setLanguage(companySettings.language || 'ar');
     setAddress(companySettings.address || '');
@@ -31,10 +33,11 @@ const CompanySettingsForm = () => {
     e.preventDefault();
     setIsSaving(true);
     setMessage('');
-    
-    const newSettings = { 
-      companyName, 
-      currency, 
+
+    const newSettings = {
+      companyName,
+      companyNameEn,
+      currency,
       language,
       address,
       phone,
@@ -58,13 +61,13 @@ const CompanySettingsForm = () => {
       </div>
       <div className="card-body">
         {message && <div className="alert alert-success">{message}</div>}
-        
+
         <form onSubmit={handleSubmit}>
           <div className="row g-3">
             {/* Basic Info */}
             <div className="col-md-6">
               <label className="form-label fw-bold small text-muted">
-                <MdBusiness className="text-gold ms-1" /> اسم الشركة
+                <MdBusiness className="text-gold ms-1" /> اسم الشركة (العربي - الأساسي)
               </label>
               <input
                 type="text"
@@ -72,6 +75,20 @@ const CompanySettingsForm = () => {
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder="مثال: الأسد الذهبي"
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label fw-bold small text-muted">
+                <MdBusiness className="text-gold ms-1" /> اسم الشركة (إنجليزي - فرعي)
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                value={companyNameEn}
+                onChange={(e) => setCompanyNameEn(e.target.value)}
+                placeholder="Ex: Golden Lion"
+                dir="ltr"
               />
             </div>
 
@@ -92,9 +109,9 @@ const CompanySettingsForm = () => {
               <label className="form-label fw-bold small text-muted">
                 <MdLanguage className="text-gold ms-1" /> اللغة
               </label>
-              <select 
+              <select
                 className="form-select"
-                value={language} 
+                value={language}
                 onChange={(e) => setLanguage(e.target.value)}
               >
                 <option value="ar">العربية</option>
@@ -144,8 +161,8 @@ const CompanySettingsForm = () => {
             </div>
 
             <div className="col-12 mt-4 text-start">
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="btn btn-gold px-4 py-2 d-flex align-items-center gap-2"
                 disabled={isSaving}
               >

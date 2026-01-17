@@ -128,6 +128,8 @@
   color: var(--primary-gold) !important;
   font-weight: 600;
   text-shadow: 0 0 12px rgba(212, 175, 55, 0.7);
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+  border-bottom: 2px solid var(--primary-gold);
 }
 
 .nav-link svg {

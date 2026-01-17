@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { addNewProduct, updateExistingProduct } from '../store/productsSlice';
 import { fetchSuppliers } from '../store/suppliersSlice';
+import { fetchCategories } from '../store/categoriesSlice';
 import { useParams, useNavigate } from 'react-router-dom';
 import { userService } from '../services/userService';
 import './ProductForm.css';
@@ -11,15 +12,17 @@ const ProductForm = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { userProfile } = useSelector((state) => state.auth);
-  
-  const productToEdit = useSelector((state) => 
+
+  const productToEdit = useSelector((state) =>
     id ? state.products.products.find(p => p.id === id) : null
   );
 
   const { suppliers } = useSelector((state) => state.suppliers);
+  const { categories } = useSelector((state) => state.categories);
   const canManageInventory = userService.canPerformAction(userProfile?.role, 'MANAGE_INVENTORY');
 
   const [name, setName] = useState('');
+  const [categoryId, setCategoryId] = useState('');
   const [quantity, setQuantity] = useState('');
   const [price, setPrice] = useState('');
   const [costPrice, setCostPrice] = useState('');
@@ -28,6 +31,7 @@ const ProductForm = () => {
 
   useEffect(() => {
     dispatch(fetchSuppliers());
+    dispatch(fetchCategories());
   }, [dispatch]);
 
   useEffect(() => {
@@ -37,8 +41,17 @@ const ProductForm = () => {
       setPrice(productToEdit.price);
       setCostPrice(productToEdit.costPrice || '');
       setSupplierId(productToEdit.supplierId || '');
+
+      // Handle Category logic
+      if (productToEdit.categoryId) {
+        setCategoryId(productToEdit.categoryId);
+      } else if (productToEdit.category) {
+        // Attempt to map legacy string category to ID
+        const matchingCat = categories.find(c => c.name === productToEdit.category);
+        if (matchingCat) setCategoryId(matchingCat.id);
+      }
     }
-  }, [productToEdit]);
+  }, [productToEdit, categories]);
 
   const canSave = [name, quantity, price, costPrice].every(Boolean) && addRequestStatus === 'idle';
 
@@ -48,22 +61,24 @@ const ProductForm = () => {
       try {
         setAddRequestStatus('pending');
         const productData = {
-          name, 
-          quantity: parseInt(quantity), 
+          name,
+          categoryId, // Save the ID
+          quantity: parseInt(quantity),
           price: parseFloat(price),
           costPrice: parseFloat(costPrice),
           supplierId
         };
-        
+
         if (id) {
-           await dispatch(updateExistingProduct({ 
-             id, 
-             ...productData
-           })).unwrap();
+          await dispatch(updateExistingProduct({
+            id,
+            ...productData
+          })).unwrap();
         } else {
           await dispatch(addNewProduct(productData)).unwrap();
         }
         setName('');
+        setCategoryId('');
         setQuantity('');
         setPrice('');
         setCostPrice('');
@@ -84,15 +99,34 @@ const ProductForm = () => {
         <label>الاسم</label>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} disabled={!canManageInventory} />
       </div>
+
+      <div>
+        <label>التصنيف</label>
+        <div className="d-flex gap-2">
+          <select
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            disabled={!canManageInventory}
+            className="flex-grow-1"
+          >
+            <option value=""> اختر التصنيف </option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
+            ))}
+          </select>
+
+        </div>
+      </div>
+
       <div>
         <label>المورد</label>
-        <select 
-          value={supplierId} 
+        <select
+          value={supplierId}
           onChange={(e) => setSupplierId(e.target.value)}
           className="supplier-select"
           disabled={!canManageInventory}
         >
-          <option value="">-- اختر مورد --</option>
+          <option value=""> اختر مورد </option>
           {suppliers.map(s => (
             <option key={s.id} value={s.id}>{s.name}</option>
           ))}

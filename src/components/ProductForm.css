@@ -18,6 +18,15 @@
   letter-spacing: 1px;
 }
 
+.product-form select {
+  padding: 4px;
+  border-radius: 4px;
+  font-weight: bold;
+  color: gold;
+  background: #232323;
+  width: fit-content;
+}
+
 .product-form div {
   margin-bottom: 1.5rem;
 }

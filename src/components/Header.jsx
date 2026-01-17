@@ -21,11 +21,13 @@ import {
   MdClose,
   MdSupervisorAccount,
   MdDescription,
-  MdPictureAsPdf
+  MdPictureAsPdf,
+  MdCategory
 } from 'react-icons/md';
 
 const Header = () => {
   const { user, userProfile } = useSelector((state) => state.auth);
+  const { companyName, companyNameEn } = useSelector((state) => state.company);
   const dispatch = useDispatch();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -75,14 +77,24 @@ const Header = () => {
     }
   };
 
+  // Reusable logo content
+  const LogoContent = () => (
+    <>
+      <GiLion className="brand-icon fs-2" />
+      <div className="d-flex flex-column lh-1">
+        <span className="fs-6">{companyName || 'الأسد الذهبي'}</span>
+        {companyNameEn && <span className="small text-white-50" style={{ fontSize: '0.7em', letterSpacing: '1px' }}>{companyNameEn}</span>}
+      </div>
+    </>
+  );
+
   // Staff users only see minimal header
   if (user && isStaff) {
     return (
       <header className="app-header navbar navbar-expand-lg navbar-dark shadow-sm sticky-top">
         <div className="header-container container-fluid">
           <Link to="/" className="brand-logo navbar-brand d-flex align-items-center gap-2 text-gold fw-bold">
-            <GiLion className="brand-icon fs-3" />
-            <span>الأسد الذهبي</span>
+            <LogoContent />
           </Link>
           <div className="d-flex align-items-center gap-3">
             <div className="d-none d-sm-block">
@@ -105,8 +117,7 @@ const Header = () => {
     <header className="app-header navbar navbar-expand-lg navbar-dark shadow-sm sticky-top">
       <div className="header-container container-fluid">
         <Link to="/" className="brand-logo navbar-brand d-flex align-items-center gap-2 text-gold fw-bold" onClick={closeMenu}>
-          <GiLion className="brand-icon fs-3" />
-          <span>الأسد الذهبي</span>
+          <LogoContent />
         </Link>
 
         <button
@@ -164,6 +175,11 @@ const Header = () => {
                     </Link>
                   </li>
                   <li className="nav-item">
+                    <Link to="/categories" className={`nav-link ${isActive('/categories')}`}>
+                      <MdCategory className="ms-1" /> التصنيفات
+                    </Link>
+                  </li>
+                  <li className="nav-item">
                     <Link to="/customers" className={`nav-link ${isActive('/customers')}`}>
                       <MdStorefront className="ms-1" /> الفروع
                     </Link>
@@ -187,16 +203,16 @@ const Header = () => {
                   {recentReceipts.length > 0 ? (
                     recentReceipts.map(tx => (
                       <li key={tx.id}>
-                        <a 
-                          className="dropdown-item text-light d-flex align-items-center gap-2" 
-                          href={tx.receiptUrl} 
-                          target="_blank" 
+                        <a
+                          className="dropdown-item text-light d-flex align-items-center gap-2"
+                          href={tx.receiptUrl}
+                          target="_blank"
                           rel="noopener noreferrer"
                         >
                           <MdPictureAsPdf className="text-danger" />
-                          <div className="d-flex flex-column" style={{fontSize: '0.85rem'}}>
+                          <div className="d-flex flex-column" style={{ fontSize: '0.85rem' }}>
                             <span>{tx.type === 'STOCK_IN' ? 'استلام' : 'بيع'} #{tx.displayId}</span>
-                            <span className="text-muted" style={{fontSize: '0.7rem'}}>
+                            <span className="text-muted" style={{ fontSize: '0.7rem' }}>
                               {new Date(tx.createdAt?.seconds ? tx.createdAt.seconds * 1000 : tx.createdAt).toLocaleDateString('ar-LY')}
                             </span>
                           </div>
@@ -243,8 +259,8 @@ const Header = () => {
         </div>
 
         {/* Mobile Sidebar Overlay */}
-        <div 
-          className={`mobile-sidebar-overlay ${mobileMenuOpen ? 'open' : ''}`} 
+        <div
+          className={`mobile-sidebar-overlay ${mobileMenuOpen ? 'open' : ''}`}
           onClick={closeMenu}
         />
 
@@ -256,7 +272,7 @@ const Header = () => {
               <MdClose className="fs-2" />
             </button>
           </div>
-          
+
           <div className="sidebar-content">
             {user && (
               <ul className="sidebar-nav">
@@ -297,6 +313,11 @@ const Header = () => {
                       </Link>
                     </li>
                     <li className="sidebar-item">
+                      <Link to="/categories" className={`sidebar-link ${isActive('/categories')}`} onClick={closeMenu}>
+                        <MdCategory /> التصنيفات
+                      </Link>
+                    </li>
+                    <li className="sidebar-item">
                       <Link to="/customers" className={`sidebar-link ${isActive('/customers')}`} onClick={closeMenu}>
                         <MdStorefront /> الفروع والعملاء
                       </Link>
@@ -306,26 +327,26 @@ const Header = () => {
 
                 <li className="sidebar-section-title">الفواتير</li>
                 <li className="sidebar-item">
-                   <div className="d-flex flex-column gap-1 p-2">
+                  <div className="d-flex flex-column gap-1 p-2">
                     {recentReceipts.length > 0 ? (
                       recentReceipts.map(tx => (
-                        <a 
+                        <a
                           key={tx.id}
                           className="sidebar-link d-flex align-items-center gap-2"
-                          style={{fontSize: '0.85rem'}}
-                          href={tx.receiptUrl} 
-                          target="_blank" 
+                          style={{ fontSize: '0.85rem' }}
+                          href={tx.receiptUrl}
+                          target="_blank"
                           rel="noopener noreferrer"
                           onClick={closeMenu}
                         >
-                          <MdPictureAsPdf className="text-gold" /> 
+                          <MdPictureAsPdf className="text-gold" />
                           {tx.type === 'STOCK_IN' ? 'استلام' : 'بيع'} #{tx.displayId}
                         </a>
                       ))
                     ) : (
                       <span className="text-muted small ps-3">لا توجد فواتير</span>
                     )}
-                   </div>
+                  </div>
                 </li>
 
                 <li className="sidebar-section-title">النظام</li>

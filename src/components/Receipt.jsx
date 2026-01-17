@@ -52,13 +52,13 @@ const Receipt = ({ transaction, company }) => {
 
             {/* Content Wrapper (Z-Index 1 to sit above watermark) */}
             <div style={{ zIndex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
-                
+
                 {/* 1. Header Section */}
                 <header className="d-flex justify-content-between align-items-end mb-4 border-bottom pb-3" style={{ borderColor: '#c5a059' }}>
                     <div className="d-flex align-items-center gap-3">
-                        <div className="d-flex justify-content-center align-items-center rounded-circle" style={{ 
-                            width: '60px', 
-                            height: '60px', 
+                        <div className="d-flex justify-content-center align-items-center rounded-circle" style={{
+                            width: '60px',
+                            height: '60px',
                             background: 'linear-gradient(135deg, #c5a059 0%, #a08040 100%)',
                             color: '#fff',
                             boxShadow: '0 4px 10px rgba(197, 160, 89, 0.3)'
@@ -69,18 +69,23 @@ const Receipt = ({ transaction, company }) => {
                             <h1 className="fw-bold m-0 text-dark" style={{ fontSize: '24px', letterSpacing: '-0.5px' }}>
                                 {company.companyName || 'الأسد الذهبي'}
                             </h1>
-                            <p className="m-0 text-muted" style={{ fontSize: '12px' }}>
+                            {company.companyNameEn && (
+                                <h2 className="m-0 text-muted" style={{ fontSize: '16px', fontWeight: 'bold', fontFamily: 'serif', marginTop: '2px' }}>
+                                    {company.companyNameEn}
+                                </h2>
+                            )}
+                            <p className="m-0 text-muted" style={{ fontSize: '12px', marginTop: '4px' }}>
                                 {company.phone ? `هاتف: ${company.phone}` : 'للتجارة والاستيراد العامة'}
                             </p>
                         </div>
                     </div>
-                    
+
                     <div className="text-end">
                         <div className="fw-bold text-uppercase" style={{ color: '#c5a059', fontSize: '18px', letterSpacing: '1px' }}>
                             {isStockIn ? 'إيصال استلام' : 'فاتورة مبيعات'}
                         </div>
                         <div className="text-muted small" style={{ direction: 'ltr' }}>
-                           #{transaction.displayId || transaction.id.slice(0, 8).toUpperCase()}
+                            #{transaction.displayId || transaction.id.slice(0, 8).toUpperCase()}
                         </div>
                     </div>
                 </header>
@@ -118,8 +123,8 @@ const Receipt = ({ transaction, company }) => {
                         </div>
                     </div>
                     <div className="col-4">
-                        <div className="p-3 rounded h-100 d-flex flex-column justify-content-center text-center text-white" 
-                             style={{ background: 'linear-gradient(135deg, #333 0%, #1a1a1a 100%)' }}>
+                        <div className="p-3 rounded h-100 d-flex flex-column justify-content-center text-center text-white"
+                            style={{ background: 'linear-gradient(135deg, #333 0%, #1a1a1a 100%)' }}>
                             <div className="text-uppercase opacity-75" style={{ fontSize: '10px' }}>تاريخ الإصدار</div>
                             <div className="fw-bold fs-5 mb-1">{date.toLocaleDateString('ar-LY')}</div>
                             <div className="opacity-75 small">{date.toLocaleTimeString('ar-LY', { hour: '2-digit', minute: '2-digit' })}</div>
@@ -161,7 +166,7 @@ const Receipt = ({ transaction, company }) => {
                     </table>
                 </div>
 
-                        {/* 4. Totals & Notes */}
+                {/* 4. Totals & Notes */}
                 <div className="row mt-auto">
                     <div className="col-7">
                         {transaction.notes && (
@@ -214,7 +219,7 @@ const Receipt = ({ transaction, company }) => {
                             <div className="small fw-bold text-muted">توقيع المستلم</div>
                         </div>
                         <div className="col-4 text-center">
-                            <div className="d-inline-flex align-items-center justify-content-center rounded-circle border border-2" 
+                            <div className="d-inline-flex align-items-center justify-content-center rounded-circle border border-2"
                                 style={{ width: '80px', height: '80px', borderColor: '#c5a059', color: '#c5a059', opacity: 0.8, transform: 'rotate(-15deg)' }}>
                                 <span className="small fw-bold text-uppercase">معتمد</span>
                             </div>
@@ -226,12 +231,12 @@ const Receipt = ({ transaction, company }) => {
                             <div className="small fw-bold text-muted">المحاسب / {transaction.createdBy?.displayName || 'المدير'}</div>
                         </div>
                     </div>
-                    
+
                     {/* Bottom Bar */}
                     <div className="text-center mt-4 pt-2 border-top" style={{ color: '#999', fontSize: '9px' }}>
                         <p className="m-0">
-                            {company.address ? `${company.address} | ` : ''} 
-                            {company.phone ? `هاتف: ${company.phone} | ` : ''} 
+                            {company.address ? `${company.address} | ` : ''}
+                            {company.phone ? `هاتف: ${company.phone} | ` : ''}
                             System ID: {transaction.id}
                         </p>
                     </div>

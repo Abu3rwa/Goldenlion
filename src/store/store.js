@@ -5,6 +5,7 @@ import suppliersReducer from './suppliersSlice';
 import companyReducer from './companySlice';
 import customersReducer from './customersSlice';
 import transactionsReducer from './transactionsSlice';
+import categoriesReducer from './categoriesSlice';
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     company: companyReducer,
     customers: customersReducer,
     transactions: transactionsReducer,
+    categories: categoriesReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -21,7 +23,7 @@ export const store = configureStore({
         // Ignore these paths in state as they may contain complex data from Firestore
         // while we migrate to full serialization in services.
         ignoredPaths: [
-          'auth.user', 
+          'auth.user',
           'products.products.lastRestockAt',
           'transactions.transactions.createdAt'
         ],

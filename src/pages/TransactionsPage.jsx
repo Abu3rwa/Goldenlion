@@ -15,7 +15,8 @@ import {
     MdSend,
     MdInbox,
     MdFilterList,
-    MdPrint
+    MdPrint,
+    MdPictureAsPdf
 } from 'react-icons/md';
 import Receipt from '../components/Receipt';
 import PrintWrapper from '../components/PrintWrapper';
@@ -24,7 +25,7 @@ const TransactionsPage = () => {
     const dispatch = useDispatch();
     const { transactions, status } = useSelector((state) => state.transactions);
     const { userProfile } = useSelector((state) => state.auth);
-    const { currency, companyName } = useSelector((state) => state.company);
+    const { currency, companyName, companyNameEn, address, phone, terms } = useSelector((state) => state.company);
 
     const [filterType, setFilterType] = useState('');
     const [commentInputs, setCommentInputs] = useState({});
@@ -170,6 +171,7 @@ const TransactionsPage = () => {
                             <thead className="table-light">
                                 <tr>
                                     <th>التوقيت</th>
+                                    <th>رقم العملية</th>
                                     <th>النوع</th>
                                     <th>الجهة</th>
                                     <th>العناصر</th>
@@ -185,6 +187,9 @@ const TransactionsPage = () => {
                                     return (
                                         <tr key={tx.id}>
                                             <td className="small text-muted">{formatDate(tx.createdAt)}</td>
+                                            <td className="fw-bold text-dark">
+                                                #{tx.displayId || tx.id.slice(0, 6)}
+                                            </td>
                                             <td>
                                                 <span className={`badge ${isStockIn ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} border`}>
                                                     {isStockIn ? 'استلام' : 'إخراج'}
@@ -210,7 +215,7 @@ const TransactionsPage = () => {
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="small">{tx.createdBy?.email?.split('@')[0]}</td>
+                                            <td className="small">{tx.createdBy?.displayName || tx.createdBy?.email?.split('@')[0]}</td>
                                             <td>
                                                 <div className="compact-comments">
                                                     {tx.notes && <p className="mb-1 small"><strong>ملاحظة:</strong> {tx.notes}</p>}
@@ -237,13 +242,26 @@ const TransactionsPage = () => {
                                                 </div>
                                             </td>
                                             <td className="text-center">
-                                                <button
-                                                    className="btn btn-outline-secondary btn-sm"
-                                                    onClick={() => handlePrint(tx)}
-                                                    title="طباعة الإيصال"
-                                                >
-                                                    <MdPrint />
-                                                </button>
+                                                <div className="btn-group btn-group-sm">
+                                                    <button
+                                                        className="btn btn-outline-secondary"
+                                                        onClick={() => handlePrint(tx)}
+                                                        title="طباعة الإيصال"
+                                                    >
+                                                        <MdPrint />
+                                                    </button>
+                                                    {tx.receiptUrl && (
+                                                        <a
+                                                            href={tx.receiptUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="btn btn-outline-danger"
+                                                            title="عرض PDF"
+                                                        >
+                                                            <MdPictureAsPdf />
+                                                        </a>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     );
@@ -259,7 +277,14 @@ const TransactionsPage = () => {
                 <PrintWrapper>
                     <Receipt
                         transaction={selectedTxForPrint}
-                        company={{ companyName: companyName || 'الأسد الذهبي', currency }}
+                        company={{
+                            companyName: companyName || 'الأسد الذهبي',
+                            companyNameEn,
+                            currency,
+                            address,
+                            phone,
+                            terms
+                        }}
                     />
                 </PrintWrapper>
             )}

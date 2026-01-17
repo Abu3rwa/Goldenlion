@@ -176,3 +176,19 @@ html {
   background: var(--primary-gold-hover);
   background-clip: content-box;
 }
+
+/* Utility Helper Classes */
+.border-dashed {
+  border-style: dashed !important;
+  border-width: 2px !important;
+}
+
+.text-white-50 {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Ensure z-index context for cards */
+.card {
+  position: relative;
+  z-index: 1;
+}

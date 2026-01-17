@@ -2,17 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProducts } from '../store/productsSlice';
 import { fetchCustomers } from '../store/customersSlice';
-import { createStockOut, fetchTransactions, updateTransactionReceiptUrl } from '../store/transactionsSlice';
+import { createStockOut, fetchTransactions } from '../store/transactionsSlice';
 import { userService } from '../services/userService';
-import { storageService } from '../services/storageService';
 import { isValidQuantity, isValidPrice, ValidationMessages } from '../utils/validation';
 import { formatCurrency } from '../utils/currency';
-import { MdArrowUpward, MdAdd, MdDelete, MdCheck, MdError, MdWarning, MdPrint, MdFileDownload, MdCloudUpload, MdVisibility } from 'react-icons/md';
+import { MdArrowUpward, MdAdd, MdDelete, MdCheck, MdError, MdWarning, MdPrint } from 'react-icons/md';
 import './StockOutPage.css';
 import './StockInPage.css'; // Reuse shared styles
 import Receipt from '../components/Receipt';
 import PrintWrapper from '../components/PrintWrapper';
-import { generatePDF, generatePDFBlob } from '../utils/pdfGenerator';
 import { toCents, calculateLineTotal } from '../utils/decimalUtils';
 
 const StockOutPage = () => {
@@ -21,7 +19,7 @@ const StockOutPage = () => {
     const { customers } = useSelector((state) => state.customers);
     const { status: txStatus, error: txError } = useSelector((state) => state.transactions);
     const { userProfile } = useSelector((state) => state.auth);
-    const { currency, companyName, address, phone, terms } = useSelector((state) => state.company);
+    const { currency, companyName, companyNameEn, address, phone, terms } = useSelector((state) => state.company);
 
     const [customerId, setCustomerId] = useState('');
     const [selectedProduct, setSelectedProduct] = useState('');
@@ -32,9 +30,6 @@ const StockOutPage = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [validationError, setValidationError] = useState('');
     const [lastTransaction, setLastTransaction] = useState(null);
-    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-    const [uploadStatus, setUploadStatus] = useState('idle');
-    const [receiptUrl, setReceiptUrl] = useState(null);
 
     const canCreateTransaction = userService.canPerformAction(userProfile?.role, 'CREATE_TRANSACTION');
 
@@ -113,8 +108,6 @@ const StockOutPage = () => {
 
         setSuccessMessage('');
         setLastTransaction(null);
-        setUploadStatus('idle');
-        setReceiptUrl(null);
 
         // Prepare data for receipt preview
         const txDataForPrint = {
@@ -129,10 +122,7 @@ const StockOutPage = () => {
             })),
             totalPriceCents: toCents(totalSales),
             notes,
-            createdBy: { 
-                email: userProfile?.email,
-                displayName: userProfile?.displayName || userProfile?.name || 'System'
-            },
+            createdBy: { email: userProfile?.email },
             createdAt: new Date()
         };
 
@@ -144,51 +134,19 @@ const StockOutPage = () => {
         }));
 
         if (!result.error) {
-            const txId = result.payload.id;
-            const finalTxData = { ...txDataForPrint, id: txId, displayId: result.payload.displayId };
-
             setSuccessMessage('تم تسجيل خروج البضاعة بنجاح!');
-            setLastTransaction(finalTxData);
+            setLastTransaction({ ...txDataForPrint, id: result.payload.id });
             setCart([]);
             setNotes('');
             setCustomerId('');
-            
+            // Refresh products to show updated quantities
             dispatch(fetchProducts());
             dispatch(fetchTransactions());
-
-            // Auto Upload
-            setUploadStatus('uploading');
-            try {
-                // Short delay to ensure DOM is ready
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                const blob = await generatePDFBlob('pdf-receipt-stock-out');
-                if (blob) {
-                    const url = await storageService.uploadReceipt(blob, `receipt_${txId}.pdf`, userProfile.uid);
-                    await dispatch(updateTransactionReceiptUrl({ transactionId: txId, receiptUrl: url }));
-                    setReceiptUrl(url);
-                    setUploadStatus('success');
-                } else {
-                    setUploadStatus('error');
-                }
-            } catch (err) {
-                console.error("Auto-upload failed:", err);
-                setUploadStatus('error');
-            }
         }
     };
 
     const handlePrint = () => {
-        setTimeout(() => {
-            window.print();
-        }, 800);
-    };
-
-    const handleDownloadPdf = async () => {
-        if (!lastTransaction) return;
-        setIsGeneratingPdf(true);
-        await generatePDF('pdf-receipt-stock-out', `receipt-out-${lastTransaction.id}.pdf`);
-        setIsGeneratingPdf(false);
+        window.print();
     };
 
     // Calculate totals
@@ -211,47 +169,14 @@ const StockOutPage = () => {
             )}
 
             {successMessage && (
-                <div className="alert alert-success d-flex flex-column gap-2 no-print">
+                <div className="alert alert-success d-flex align-items-center justify-content-between gap-2 no-print">
                     <div className="d-flex align-items-center gap-2">
                         <MdCheck /> {successMessage}
                     </div>
-
-                    {/* Upload Status Feedback */}
-                    {uploadStatus === 'uploading' && (
-                        <div className="small text-muted d-flex align-items-center gap-2">
-                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                            جاري حفظ الإيصال في النظام...
-                        </div>
-                    )}
-                    {uploadStatus === 'success' && (
-                        <div className="small text-success d-flex align-items-center gap-2">
-                            <MdCloudUpload /> تم حفظ الإيصال الرقمي بنجاح
-                        </div>
-                    )}
-
                     {lastTransaction && (
-                        <div className="d-flex gap-2 mt-2">
-                            <button className="btn btn-sm btn-success d-flex align-items-center gap-1" onClick={handlePrint}>
-                                <MdPrint /> طباعة
-                            </button>
-                            <button 
-                                className="btn btn-sm btn-primary d-flex align-items-center gap-1" 
-                                onClick={handleDownloadPdf}
-                                disabled={isGeneratingPdf}
-                            >
-                                <MdFileDownload /> {isGeneratingPdf ? 'جاري التحميل...' : 'تحميل PDF'}
-                            </button>
-                            {receiptUrl && (
-                                <a 
-                                    href={receiptUrl} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="btn btn-sm btn-outline-dark d-flex align-items-center gap-1"
-                                >
-                                    <MdVisibility /> عرض الإيصال المحفوظ
-                                </a>
-                            )}
-                        </div>
+                        <button className="btn btn-sm btn-success d-flex align-items-center gap-1" onClick={handlePrint}>
+                            <MdPrint /> طباعة الإيصال
+                        </button>
                     )}
                 </div>
             )}
@@ -460,27 +385,14 @@ const StockOutPage = () => {
                     </div>
                 </div>
             </div>
-
             {/* Hidden Printable Area */}
             {lastTransaction && (
                 <PrintWrapper>
                     <Receipt
                         transaction={lastTransaction}
-                        company={{ companyName: companyName || 'الأسد الذهبي', currency, address, phone, terms }}
+                        company={{ companyName: companyName || 'الأسد الذهبي', companyNameEn, currency, address, phone, terms }}
                     />
                 </PrintWrapper>
-            )}
-
-            {/* Hidden Area for PDF Generation (Must be visible to DOM, but off-screen) */}
-            {lastTransaction && (
-                <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
-                    <div id="pdf-receipt-stock-out" style={{ width: '210mm', backgroundColor: 'white' }}>
-                        <Receipt
-                            transaction={lastTransaction}
-                            company={{ companyName: companyName || 'الأسد الذهبي', currency, address, phone, terms }}
-                        />
-                    </div>
-                </div>
             )}
         </div>
     );

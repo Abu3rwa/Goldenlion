@@ -22,6 +22,7 @@ import StockInPage from './pages/StockInPage';
 import StockOutPage from './pages/StockOutPage';
 import TransactionsPage from './pages/TransactionsPage';
 import UsersPage from './pages/UsersPage';
+import CategoriesPage from './pages/CategoriesPage';
 import PrivateRoute from './components/PrivateRoute';
 import './App.css';
 
@@ -158,6 +159,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <UsersPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/categories"
+              element={
+                <PrivateRoute requiredPermission="VIEW_ALL_PAGES">
+                  <CategoriesPage />
                 </PrivateRoute>
               }
             />

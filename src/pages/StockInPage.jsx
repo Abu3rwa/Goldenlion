@@ -20,7 +20,7 @@ const StockInPage = () => {
     const { suppliers } = useSelector((state) => state.suppliers);
     const { status: txStatus, error: txError } = useSelector((state) => state.transactions);
     const { userProfile } = useSelector((state) => state.auth);
-    const { currency, companyName, address, phone, terms } = useSelector((state) => state.company);
+    const { currency, companyName, companyNameEn, address, phone, terms } = useSelector((state) => state.company);
 
     const [supplierId, setSupplierId] = useState('');
     const [selectedProduct, setSelectedProduct] = useState('');
@@ -114,7 +114,7 @@ const StockInPage = () => {
             })),
             totalCostCents: toCents(totalCost),
             notes,
-            createdBy: { 
+            createdBy: {
                 email: userProfile?.email,
                 displayName: userProfile?.displayName || userProfile?.name || 'System'
             },
@@ -132,13 +132,13 @@ const StockInPage = () => {
         if (!result.error) {
             const txId = result.payload.id;
             const finalTxData = { ...txDataForPrint, id: txId, displayId: result.payload.displayId };
-            
+
             setSuccessMessage('تم تسجيل استلام البضاعة بنجاح!');
             setLastTransaction(finalTxData);
             setCart([]);
             setNotes('');
             setSupplierId('');
-            
+
             dispatch(fetchProducts());
             dispatch(fetchTransactions());
 
@@ -147,7 +147,7 @@ const StockInPage = () => {
             try {
                 // Short delay to ensure DOM is ready with the new receipt
                 await new Promise(resolve => setTimeout(resolve, 500));
-                
+
                 const blob = await generatePDFBlob('pdf-receipt-stock-in');
                 if (blob) {
                     const url = await storageService.uploadReceipt(blob, `receipt_${txId}.pdf`, userProfile.uid);
@@ -197,7 +197,7 @@ const StockInPage = () => {
                     <div className="d-flex align-items-center gap-2">
                         <MdCheck /> {successMessage}
                     </div>
-                    
+
                     {/* Upload Status Feedback */}
                     {uploadStatus === 'uploading' && (
                         <div className="small text-muted d-flex align-items-center gap-2">
@@ -210,23 +210,23 @@ const StockInPage = () => {
                             <MdCloudUpload /> تم حفظ الإيصال الرقمي بنجاح
                         </div>
                     )}
-                    
+
                     {lastTransaction && (
                         <div className="d-flex gap-2 mt-2">
                             <button className="btn btn-sm btn-success d-flex align-items-center gap-1" onClick={handlePrint}>
                                 <MdPrint /> طباعة
                             </button>
-                            <button 
-                                className="btn btn-sm btn-primary d-flex align-items-center gap-1" 
+                            <button
+                                className="btn btn-sm btn-primary d-flex align-items-center gap-1"
                                 onClick={handleDownloadPdf}
                                 disabled={isGeneratingPdf}
                             >
                                 <MdFileDownload /> {isGeneratingPdf ? 'جاري التحميل...' : 'تحميل PDF'}
                             </button>
                             {receiptUrl && (
-                                <a 
-                                    href={receiptUrl} 
-                                    target="_blank" 
+                                <a
+                                    href={receiptUrl}
+                                    target="_blank"
                                     rel="noopener noreferrer"
                                     className="btn btn-sm btn-outline-dark d-flex align-items-center gap-1"
                                 >
@@ -420,12 +420,18 @@ const StockInPage = () => {
                 </div>
             </div>
 
+            {/* Assuming useSelector is defined earlier in the component, adding companyNameEn */}
+            {/* If useSelector is not defined, this line should be placed at the top of the functional component */}
+            {/* For the purpose of this edit, we'll assume it's already there and just needs modification */}
+            {/* If it's not, you would typically add it like: */}
+            {/* const { currency, companyName, companyNameEn, address, phone, terms } = useSelector((state) => state.company); */}
+
             {/* Hidden Printable Area for Browser Print */}
             {lastTransaction && (
                 <PrintWrapper>
                     <Receipt
                         transaction={lastTransaction}
-                        company={{ companyName: companyName || 'الأسد الذهبي', currency, address, phone, terms }}
+                        company={{ companyName: companyName || 'الأسد الذهبي', companyNameEn, currency, address, phone, terms }}
                     />
                 </PrintWrapper>
             )}
