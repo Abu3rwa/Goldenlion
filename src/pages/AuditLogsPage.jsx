@@ -43,14 +43,16 @@ const AuditLogsPage = () => {
   };
 
   const getActionType = (action) => {
-    if (action?.startsWith('ADD_')) return 'add';
+    if (action?.startsWith('ADD_') || action === 'STOCK_IN') return 'add';
     if (action?.startsWith('UPDATE_')) return 'update';
-    if (action?.startsWith('DELETE_')) return 'delete';
+    if (action?.startsWith('DELETE_') || action === 'STOCK_OUT') return 'delete'; // Using delete style (red) for stock out
     return 'update';
   };
 
   const getActionIcon = (action) => {
     const type = getActionType(action);
+    if (action === 'STOCK_IN') return <MdInbox />;
+    if (action === 'STOCK_OUT') return <MdDownload />;
     switch (type) {
       case 'add': return <MdAdd />;
       case 'delete': return <MdDelete />;
@@ -69,6 +71,11 @@ const AuditLogsPage = () => {
       case 'ADD_CUSTOMER': return 'إضافة فرع';
       case 'UPDATE_CUSTOMER': return 'تحديث فرع';
       case 'DELETE_CUSTOMER': return 'حذف فرع';
+      case 'ADD_USER': return 'إضافة مستخدم';
+      case 'UPDATE_USER': return 'تحديث مستخدم';
+      case 'DELETE_USER': return 'حذف مستخدم';
+      case 'STOCK_IN': return 'استلام مخزون';
+      case 'STOCK_OUT': return 'صرف مخزون';
       default: return action;
     }
   };
@@ -84,21 +91,67 @@ const AuditLogsPage = () => {
       supplierId: 'المورد',
       contact: 'جهة الاتصال',
       address: 'العنوان',
-      phone: 'الهاتف'
+      phone: 'الهاتف',
+      email: 'البريد الإلكتروني',
+      notes: 'ملاحظات',
+      isActive: 'نشط',
+      role: 'الدور',
+      description: 'الوصف',
+      unit: 'الوحدة',
+      minStockLevel: 'الحد الأدنى للمخزون',
+      displayId: 'رقم العملية',
+      itemCount: 'عدد الأصناف',
+      totalValue: 'القيمة الإجمالية'
     };
 
-    if ((action === 'UPDATE_PRODUCT' || action === 'UPDATE_SUPPLIER') && Array.isArray(details)) {
+    const formatValue = (val) => {
+      if (val === true) return 'نعم';
+      if (val === false) return 'لا';
+      if (val === null || val === undefined) return '-';
+      
+      const valueTranslations = {
+        'owner': 'مالك',
+        'accountant': 'محاسب',
+        'staff': 'موظف',
+        'admin': 'مشرف'
+      };
+      
+      return valueTranslations[val] || val;
+    };
+
+    if ((action === 'UPDATE_PRODUCT' || action === 'UPDATE_SUPPLIER' || action === 'UPDATE_CUSTOMER' || action === 'UPDATE_USER') && Array.isArray(details)) {
       return (
-        <ul className="details-list">
+        <ul className="list-unstyled mb-0 small">
           {details.map((change, idx) => (
             <li key={idx}>
-              <span className="field-name">{fieldTranslations[change.field] || change.field}:</span>
-              <span className="val-old">{change.old}</span>
-              <span>→</span>
-              <span className="val-new">{change.new}</span>
+              <span className="fw-bold ms-1">{fieldTranslations[change.field] || change.field}:</span>
+              <span className="text-decoration-line-through text-muted ms-1">{formatValue(change.old)}</span>
+              <span className="text-muted ms-1">→</span>
+              <span className="text-success fw-bold">{formatValue(change.new)}</span>
             </li>
           ))}
         </ul>
+      );
+    }
+
+    if (action === 'STOCK_IN' || action === 'STOCK_OUT') {
+      return (
+         <div className="d-flex flex-wrap gap-2 small">
+            <span className="badge bg-light text-dark border">
+               {fieldTranslations.displayId}: {details.displayId || '-'}
+            </span>
+            <span className="badge bg-light text-dark border">
+               {fieldTranslations.itemCount}: {details.itemCount || 0}
+            </span>
+            <span className="badge bg-light text-dark border">
+               {fieldTranslations.totalValue}: {typeof details.totalValue === 'number' ? details.totalValue.toFixed(2) : details.totalValue}
+            </span>
+            {details.notes && (
+               <div className="w-100 text-muted mt-1 fst-italic">
+                 "{details.notes}"
+               </div>
+            )}
+         </div>
       );
     }
 
@@ -119,8 +172,41 @@ const AuditLogsPage = () => {
   const deleteCount = logs.filter(l => l.action?.startsWith('DELETE_')).length;
 
   const handleExport = () => {
-    const headers = ['timestamp', 'action', 'entityName', 'userEmail', 'details'];
-    exportToCSV(logs, 'audit_logs', headers);
+    const csvHeaders = ['التوقيت', 'العملية', 'العنصر', 'المستخدم', 'التفاصيل'];
+    
+    const translatedLogs = logs.map(log => {
+      const timestamp = formatTimestamp(log.timestamp);
+      
+      let detailsStr = '';
+      if (Array.isArray(log.details)) {
+        const fieldMap = {
+          name: 'الاسم', quantity: 'الكمية', price: 'سعر البيع', costPrice: 'سعر التكلفة',
+          supplierId: 'المورد', contact: 'جهة الاتصال', address: 'العنوان', phone: 'الهاتف',
+          email: 'البريد', role: 'الدور', isActive: 'نشط'
+        };
+        
+        detailsStr = log.details.map(d => {
+             const field = fieldMap[d.field] || d.field;
+             const oldVal = d.old === true ? 'نعم' : d.old === false ? 'لا' : d.old;
+             const newVal = d.new === true ? 'نعم' : d.new === false ? 'لا' : d.new;
+             return `${field}: ${oldVal} -> ${newVal}`;
+        }).join(' | ');
+      } else if (typeof log.details === 'object') {
+         detailsStr = JSON.stringify(log.details);
+      } else {
+         detailsStr = String(log.details || '');
+      }
+
+      return {
+        'التوقيت': `${timestamp.date} ${timestamp.time}`,
+        'العملية': translateAction(log.action),
+        'العنصر': log.entityName || '-',
+        'المستخدم': log.userEmail || '-',
+        'التفاصيل': detailsStr
+      };
+    });
+
+    exportToCSV(translatedLogs, 'audit_logs', csvHeaders);
   };
 
   return (

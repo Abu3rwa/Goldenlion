@@ -76,7 +76,7 @@ function App() {
 
   return (
     <Router>
-      <div dir="rtl" className="min-vh-100 bg-light">
+      <div dir="rtl" className="min-vh-100 bg-light d-flex flex-column">
         <Header />
         <main className="container-fluid py-4 px-3 px-md-4">
           <Routes>

@@ -20,6 +20,11 @@ body {
   background-color: var(--bg-light);
   color: var(--text-main);
   line-height: 1.6;
+  overflow-x: hidden;
+}
+
+html {
+  overflow-x: hidden;
 }
 
 /* Custom Bootstrap Overrides */
