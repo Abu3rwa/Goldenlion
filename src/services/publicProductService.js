@@ -23,16 +23,13 @@ export const publicProductService = {
      * Get all public products
      */
     getAllProducts: async () => {
-        const q = query(
-            collection(db, COLLECTIONS.PUBLIC_PRODUCTS),
-            orderBy('sortOrder'),
-            orderBy('name')
-        );
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = await getDocs(collection(db, COLLECTIONS.PUBLIC_PRODUCTS));
         const products = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
+        // Sort client-side to avoid composite index requirement
+        products.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
         return serializeFirestoreData(products);
     },
 

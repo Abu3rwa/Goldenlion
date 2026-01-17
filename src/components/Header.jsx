@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../store/authSlice';
 import { userService } from '../services/userService';
@@ -31,6 +31,7 @@ const Header = () => {
   const { companyName, companyNameEn } = useSelector((state) => state.company);
   const dispatch = useDispatch();
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [recentReceipts, setRecentReceipts] = useState([]);
 
@@ -135,123 +136,84 @@ const Header = () => {
         {/* Desktop Navigation */}
         <div className="collapse navbar-collapse d-none d-lg-block">
           {user && (
-            <ul className="navbar-nav header-nav me-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-1">
-              <li className="nav-item">
-                <Link to="/" className={`nav-link ${isActive('/')}`}>
-                  <MdDashboard className="ms-1" /> لوحة التحكم
-                </Link>
-              </li>
+            <div className="d-flex align-items-center gap-2 me-auto">
+              {/* Dashboard Link */}
+              <Link to="/" className={`nav-link ${isActive('/')}`}>
+                <MdDashboard /> الرئيسية
+              </Link>
 
-              {/* Stock Operations */}
+              {/* Stock Operations Select */}
               {canViewAllPages && (
-                <>
-                  <li className="nav-item">
-                    <Link to="/stock-in" className={`nav-link ${isActive('/stock-in')}`}>
-                      <MdArrowDownward className="ms-1" /> استلام
-                    </Link>
-                  </li>
-                  <li className="nav-item">
-                    <Link to="/stock-out" className={`nav-link ${isActive('/stock-out')}`}>
-                      <MdArrowUpward className="ms-1" /> إخراج
-                    </Link>
-                  </li>
-                </>
+                <select
+                  className="nav-select"
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      navigate(e.target.value);
+                    }
+                  }}
+                >
+                  <option value="">📦 المخزون</option>
+                  <option value="/stock-in">⬇️ استلام مخزون</option>
+                  <option value="/stock-out">⬆️ إخراج مخزون</option>
+                  <option value="/transactions">🔄 سجل المعاملات</option>
+                </select>
               )}
 
-              <li className="nav-item">
-                <Link to="/transactions" className={`nav-link ${isActive('/transactions')}`}>
-                  <MdSwapVert className="ms-1" /> المعاملات
-                </Link>
-              </li>
-
-              {/* Inventory Management */}
+              {/* Data Management Select */}
               {canViewAllPages && (
-                <>
-                  <li className="nav-item">
-                    <Link to="/add" className={`nav-link ${isActive('/add')}`}>
-                      <MdAddBox className="ms-1" /> منتج جديد
-                    </Link>
-                  </li>
-                  <li className="nav-item">
-                    <Link to="/suppliers" className={`nav-link ${isActive('/suppliers')}`}>
-                      <MdPeople className="ms-1" /> الموردين
-                    </Link>
-                  </li>
-                  <li className="nav-item">
-                    <Link to="/categories" className={`nav-link ${isActive('/categories')}`}>
-                      <MdCategory className="ms-1" /> التصنيفات
-                    </Link>
-                  </li>
-                  <li className="nav-item">
-                    <Link to="/customers" className={`nav-link ${isActive('/customers')}`}>
-                      <MdStorefront className="ms-1" /> الفروع
-                    </Link>
-                  </li>
-                </>
+                <select
+                  className="nav-select"
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      navigate(e.target.value);
+                    }
+                  }}
+                >
+                  <option value="">📋 البيانات</option>
+                  <option value="/add">➕ إضافة منتج</option>
+                  <option value="/categories">🏷️ التصنيفات</option>
+                  <option value="/suppliers">👥 الموردين</option>
+                  <option value="/customers">🏪 الفروع</option>
+                </select>
               )}
 
-              <li className="nav-item">
-                <Link to="/audit" className={`nav-link ${isActive('/audit')}`}>
-                  <MdHistory className="ms-1" /> السجل
-                </Link>
-              </li>
-
-              {/* Recent Receipts Dropdown */}
-              <li className="nav-item dropdown">
-                <a className="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  <MdDescription className="ms-1" /> الفواتير
-                </a>
-                <ul className="dropdown-menu dropdown-menu-end bg-dark border-secondary shadow-lg">
-                  <li className="px-3 py-2 text-muted small border-bottom border-secondary mb-2">أحدث الفواتير</li>
-                  {recentReceipts.length > 0 ? (
-                    recentReceipts.map(tx => (
-                      <li key={tx.id}>
-                        <a
-                          className="dropdown-item text-light d-flex align-items-center gap-2"
-                          href={tx.receiptUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <MdPictureAsPdf className="text-danger" />
-                          <div className="d-flex flex-column" style={{ fontSize: '0.85rem' }}>
-                            <span>{tx.type === 'STOCK_IN' ? 'استلام' : 'بيع'} #{tx.displayId}</span>
-                            <span className="text-muted" style={{ fontSize: '0.7rem' }}>
-                              {new Date(tx.createdAt?.seconds ? tx.createdAt.seconds * 1000 : tx.createdAt).toLocaleDateString('ar-LY')}
-                            </span>
-                          </div>
-                        </a>
-                      </li>
-                    ))
-                  ) : (
-                    <li className="dropdown-item text-muted small text-center">لا توجد فواتير محفوظة</li>
-                  )}
-                </ul>
-              </li>
-
-              {/* Store Management */}
+              {/* Store Management Select */}
               {canViewStore && (
-                <li className="nav-item">
-                  <Link to="/admin/store" className={`nav-link ${isActive('/admin/store')}`}>
-                    <MdShoppingCart className="ms-1" /> المتجر
-                  </Link>
-                </li>
+                <select
+                  className="nav-select"
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      navigate(e.target.value);
+                    }
+                  }}
+                >
+                  <option value="">🛒 المتجر</option>
+                  <option value="/admin/store">📊 لوحة المتجر</option>
+                  <option value="/admin/store/products">📦 المنتجات</option>
+                  <option value="/admin/store/orders">🧾 الطلبات</option>
+                  <option value="/admin/store/cities">🏙️ مدن التوصيل</option>
+                </select>
               )}
 
-              {/* User Management */}
-              {canManageUsers && (
-                <li className="nav-item">
-                  <Link to="/users" className={`nav-link ${isActive('/users')}`}>
-                    <MdSupervisorAccount className="ms-1" /> المستخدمين
-                  </Link>
-                </li>
-              )}
-
-              <li className="nav-item">
-                <Link to="/settings" className={`nav-link ${isActive('/settings')}`}>
-                  <MdSettings className="ms-1" /> الإعدادات
-                </Link>
-              </li>
-            </ul>
+              {/* System Select */}
+              <select
+                className="nav-select"
+                value=""
+                onChange={(e) => {
+                  if (e.target.value) {
+                    navigate(e.target.value);
+                  }
+                }}
+              >
+                <option value="">⚙️ النظام</option>
+                <option value="/audit">📜 سجل النظام</option>
+                {canManageUsers && <option value="/users">👤 المستخدمين</option>}
+                <option value="/settings">🔧 الإعدادات</option>
+              </select>
+            </div>
           )}
 
           {user && (

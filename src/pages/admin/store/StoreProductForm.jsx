@@ -16,6 +16,7 @@ const StoreProductForm = () => {
     const { currentProduct } = useSelector((state) => state.publicProducts);
     const { userProfile } = useSelector((state) => state.auth);
 
+    const [code, setCode] = useState('');
     const [name, setName] = useState('');
     const [nameEn, setNameEn] = useState('');
     const [description, setDescription] = useState('');
@@ -43,6 +44,7 @@ const StoreProductForm = () => {
 
     useEffect(() => {
         if (isEditing && currentProduct) {
+            setCode(currentProduct.code || '');
             setName(currentProduct.name || '');
             setNameEn(currentProduct.nameEn || '');
             setDescription(currentProduct.description || '');
@@ -83,6 +85,7 @@ const StoreProductForm = () => {
         setLoading(true);
 
         const productData = {
+            code: code.trim(),
             name: name.trim(),
             nameEn: nameEn.trim(),
             description: description.trim(),
@@ -143,7 +146,18 @@ const StoreProductForm = () => {
                             </div>
                             <div className="card-body">
                                 <div className="row g-3">
-                                    <div className="col-md-6">
+                                    <div className="col-md-4">
+                                        <label className="form-label">كود المنتج</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            value={code}
+                                            onChange={(e) => setCode(e.target.value)}
+                                            placeholder="مثال: BAG-001"
+                                            dir="ltr"
+                                        />
+                                    </div>
+                                    <div className="col-md-4">
                                         <label className="form-label">اسم المنتج (عربي) *</label>
                                         <input
                                             type="text"
@@ -154,7 +168,7 @@ const StoreProductForm = () => {
                                             required
                                         />
                                     </div>
-                                    <div className="col-md-6">
+                                    <div className="col-md-4">
                                         <label className="form-label">اسم المنتج (إنجليزي)</label>
                                         <input
                                             type="text"

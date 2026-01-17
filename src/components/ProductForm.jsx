@@ -21,6 +21,7 @@ const ProductForm = () => {
   const { categories } = useSelector((state) => state.categories);
   const canManageInventory = userService.canPerformAction(userProfile?.role, 'MANAGE_INVENTORY');
 
+  const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -36,6 +37,7 @@ const ProductForm = () => {
 
   useEffect(() => {
     if (productToEdit) {
+      setCode(productToEdit.code || '');
       setName(productToEdit.name);
       setQuantity(productToEdit.quantity);
       setPrice(productToEdit.price);
@@ -61,6 +63,7 @@ const ProductForm = () => {
       try {
         setAddRequestStatus('pending');
         const productData = {
+          code,
           name,
           categoryId, // Save the ID
           quantity: parseInt(quantity),
@@ -95,9 +98,22 @@ const ProductForm = () => {
   return (
     <form className="product-form" onSubmit={handleSubmit}>
       <h2>{id ? 'تعديل المنتج' : 'إضافة منتج'}</h2>
-      <div>
-        <label>الاسم</label>
-        <input type="text" value={name} onChange={(e) => setName(e.target.value)} disabled={!canManageInventory} />
+      <div className="row g-3 mb-3">
+        <div className="col-md-4">
+          <label>كود المنتج</label>
+          <input
+            type="text"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            disabled={!canManageInventory}
+            placeholder="مثال: BAG-001"
+            dir="ltr"
+          />
+        </div>
+        <div className="col-md-8">
+          <label>الاسم</label>
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} disabled={!canManageInventory} />
+        </div>
       </div>
 
       <div>
