@@ -1,6 +1,7 @@
 import { db } from './firebaseConfig';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { auditService } from './auditService';
+import { serializeFirestoreData } from '../utils/serialization';
 
 const suppliersCollectionRef = collection(db, 'suppliers');
 
