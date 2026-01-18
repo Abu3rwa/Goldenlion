@@ -86,18 +86,23 @@ const Header = () => {
     <>
       <GiLion className="brand-icon fs-2" />
       <div className="d-flex flex-column lh-1">
-        <span className="fs-6">{companyName || 'الأسد الذهبي'}</span>
+        <span className="fs-6 ">{companyName || 'الأسد الذهبي'}</span>
         {companyNameEn && <span className="small text-white-50" style={{ fontSize: '0.7em', letterSpacing: '1px' }}>{companyNameEn}</span>}
       </div>
     </>
   );
+
+  // Hide header on landing page for non-authenticated users
+  if (!user && location.pathname === '/') {
+    return null;
+  }
 
   // Staff users only see minimal header
   if (user && isStaff) {
     return (
       <header className="app-header navbar navbar-expand-lg navbar-dark shadow-sm sticky-top">
         <div className="header-container container-fluid">
-          <Link to="/" className="brand-logo navbar-brand d-flex align-items-center gap-2 text-gold fw-bold">
+          <Link to="/transactions" className="brand-logo navbar-brand d-flex align-items-center gap-2 text-gold fw-bold">
             <LogoContent />
           </Link>
           <div className="d-flex align-items-center gap-3">
@@ -137,12 +142,18 @@ const Header = () => {
         <div className="collapse navbar-collapse d-none d-lg-block">
           {user && (
             <div className="d-flex align-items-center gap-2 me-auto">
-              {/* Dashboard Link */}
-              <Link to="/" className={`nav-link ${isActive('/')}`}>
-                <MdDashboard /> الرئيسية
-              </Link>
+              {/* Dashboard Link - Role Based */}
+              {canViewAllPages ? (
+                <Link to="/dashboard" className={`nav-link ${isActive('/dashboard')}`}>
+                  <MdDashboard /> لوحة التحكم
+                </Link>
+              ) : canViewStore ? (
+                <Link to="/admin/store" className={`nav-link ${isActive('/admin/store')}`}>
+                  <MdDashboard /> لوحة المبيعات
+                </Link>
+              ) : null}
 
-              {/* Stock Operations Select */}
+              {/* Stock Operations Select - Inventory users only */}
               {canViewAllPages && (
                 <select
                   className="nav-select"
@@ -179,8 +190,8 @@ const Header = () => {
                 </select>
               )}
 
-              {/* Store Management Select */}
-              {canViewStore && (
+              {/* Store Management Select - Owner only (sales_manager has their dashboard link) */}
+              {canViewAllPages && canViewStore && (
                 <select
                   className="nav-select"
                   value=""
@@ -198,34 +209,52 @@ const Header = () => {
                 </select>
               )}
 
-              {/* System Select */}
-              <select
-                className="nav-select"
-                value=""
-                onChange={(e) => {
-                  if (e.target.value) {
-                    navigate(e.target.value);
-                  }
-                }}
-              >
-                <option value="">⚙️ النظام</option>
-                <option value="/audit">📜 سجل النظام</option>
-                {canManageUsers && <option value="/users">👤 المستخدمين</option>}
-                <option value="/settings">🔧 الإعدادات</option>
-              </select>
+              {/* Sales Manager Store Select - Only for sales_manager (not owner) */}
+              {canViewStore && !canViewAllPages && (
+                <select
+                  className="nav-select"
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      navigate(e.target.value);
+                    }
+                  }}
+                >
+                  <option value="">🛒 إدارة المتجر</option>
+                  <option value="/admin/store/products">📦 المنتجات</option>
+                  <option value="/admin/store/orders">🧾 الطلبات</option>
+                  <option value="/admin/store/cities">🏙️ مدن التوصيل</option>
+                </select>
+              )}
+
+              {/* System Select - Only for users with VIEW_ALL_PAGES */}
+              {canViewAllPages && (
+                <select
+                  className="nav-select"
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      navigate(e.target.value);
+                    }
+                  }}
+                >
+                  <option value="">⚙️ النظام</option>
+                  <option value="/audit">📜 سجل النظام</option>
+                  {canManageUsers && <option value="/users">👤 المستخدمين</option>}
+                  <option value="/settings">🔧 الإعدادات</option>
+                </select>
+              )}
             </div>
           )}
 
           {user && (
-            <div className="d-flex align-items-center gap-3 pt-3 pt-lg-0 border-top border-secondary mt-3 mt-lg-0 border-top-0-lg">
-              <div className="d-none d-lg-block">
-                {userProfile?.role && (
-                  <span className="badge bg-gold text-dark">
-                    {getRoleLabel(userProfile.role)}
-                  </span>
-                )}
-              </div>
-              <button onClick={handleLogout} className="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 px-3">
+            <div className="header-user-area">
+              {userProfile?.role && (
+                <span className="user-role-badge">
+                  {getRoleLabel(userProfile.role)}
+                </span>
+              )}
+              <button onClick={handleLogout} className="logout-btn">
                 <MdLogout /> <span>خروج</span>
               </button>
             </div>
@@ -250,11 +279,20 @@ const Header = () => {
           <div className="sidebar-content">
             {user && (
               <ul className="sidebar-nav">
-                <li className="sidebar-item">
-                  <Link to="/" className={`sidebar-link ${isActive('/')}`} onClick={closeMenu}>
-                    <MdDashboard /> لوحة التحكم
-                  </Link>
-                </li>
+                {/* Role-based dashboard link */}
+                {canViewAllPages ? (
+                  <li className="sidebar-item">
+                    <Link to="/dashboard" className={`sidebar-link ${isActive('/dashboard')}`} onClick={closeMenu}>
+                      <MdDashboard /> لوحة التحكم
+                    </Link>
+                  </li>
+                ) : canViewStore ? (
+                  <li className="sidebar-item">
+                    <Link to="/admin/store" className={`sidebar-link ${isActive('/admin/store')}`} onClick={closeMenu}>
+                      <MdDashboard /> لوحة المبيعات
+                    </Link>
+                  </li>
+                ) : null}
 
                 {canViewAllPages && (
                   <>
@@ -299,43 +337,76 @@ const Header = () => {
                   </>
                 )}
 
-                <li className="sidebar-section-title">الفواتير</li>
-                <li className="sidebar-item">
-                  <div className="d-flex flex-column gap-1 p-2">
-                    {recentReceipts.length > 0 ? (
-                      recentReceipts.map(tx => (
-                        <a
-                          key={tx.id}
-                          className="sidebar-link d-flex align-items-center gap-2"
-                          style={{ fontSize: '0.85rem' }}
-                          href={tx.receiptUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={closeMenu}
-                        >
-                          <MdPictureAsPdf className="text-gold" />
-                          {tx.type === 'STOCK_IN' ? 'استلام' : 'بيع'} #{tx.displayId}
-                        </a>
-                      ))
-                    ) : (
-                      <span className="text-muted small ps-3">لا توجد فواتير</span>
-                    )}
-                  </div>
-                </li>
+                {/* Receipts Section - Inventory users only */}
+                {canViewAllPages && (
+                  <>
+                    <li className="sidebar-section-title">الفواتير</li>
+                    <li className="sidebar-item">
+                      <div className="d-flex flex-column gap-1 p-2">
+                        {recentReceipts.length > 0 ? (
+                          recentReceipts.map(tx => (
+                            <a
+                              key={tx.id}
+                              className="sidebar-link d-flex align-items-center gap-2"
+                              style={{ fontSize: '0.85rem' }}
+                              href={tx.receiptUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={closeMenu}
+                            >
+                              <MdPictureAsPdf className="text-gold" />
+                              {tx.type === 'STOCK_IN' ? 'استلام' : 'بيع'} #{tx.displayId}
+                            </a>
+                          ))
+                        ) : (
+                          <span className="text-muted small ps-3">لا توجد فواتير</span>
+                        )}
+                      </div>
+                    </li>
+                  </>
+                )}
 
-                <li className="sidebar-section-title">النظام</li>
-                <li className="sidebar-item">
-                  <Link to="/audit" className={`sidebar-link ${isActive('/audit')}`} onClick={closeMenu}>
-                    <MdHistory /> سجل النظام
-                  </Link>
-                </li>
+                {/* System Section - Inventory users only */}
+                {canViewAllPages && (
+                  <>
+                    <li className="sidebar-section-title">النظام</li>
+                    <li className="sidebar-item">
+                      <Link to="/audit" className={`sidebar-link ${isActive('/audit')}`} onClick={closeMenu}>
+                        <MdHistory /> سجل النظام
+                      </Link>
+                    </li>
+                  </>
+                )}
 
-                {canViewStore && (
+                {/* Store Management - Owner sees it here */}
+                {canViewStore && canViewAllPages && (
                   <>
                     <li className="sidebar-section-title">إدارة المتجر</li>
                     <li className="sidebar-item">
                       <Link to="/admin/store" className={`sidebar-link ${isActive('/admin/store')}`} onClick={closeMenu}>
                         <MdShoppingCart /> لوحة المتجر
+                      </Link>
+                    </li>
+                  </>
+                )}
+
+                {/* Store Links for Sales Manager - More detailed */}
+                {canViewStore && !canViewAllPages && (
+                  <>
+                    <li className="sidebar-section-title">إدارة المتجر</li>
+                    <li className="sidebar-item">
+                      <Link to="/admin/store/products" className={`sidebar-link ${isActive('/admin/store/products')}`} onClick={closeMenu}>
+                        <MdShoppingCart /> المنتجات
+                      </Link>
+                    </li>
+                    <li className="sidebar-item">
+                      <Link to="/admin/store/orders" className={`sidebar-link ${isActive('/admin/store/orders')}`} onClick={closeMenu}>
+                        <MdDescription /> الطلبات
+                      </Link>
+                    </li>
+                    <li className="sidebar-item">
+                      <Link to="/admin/store/cities" className={`sidebar-link ${isActive('/admin/store/cities')}`} onClick={closeMenu}>
+                        <MdStorefront /> مدن التوصيل
                       </Link>
                     </li>
                   </>
@@ -349,11 +420,13 @@ const Header = () => {
                   </li>
                 )}
 
-                <li className="sidebar-item">
-                  <Link to="/settings" className={`sidebar-link ${isActive('/settings')}`} onClick={closeMenu}>
-                    <MdSettings /> الإعدادات
-                  </Link>
-                </li>
+                {canViewAllPages && (
+                  <li className="sidebar-item">
+                    <Link to="/settings" className={`sidebar-link ${isActive('/settings')}`} onClick={closeMenu}>
+                      <MdSettings /> الإعدادات
+                    </Link>
+                  </li>
+                )}
               </ul>
             )}
 
@@ -378,7 +451,7 @@ const Header = () => {
           </div>
         </div>
       </div>
-    </header>
+    </header >
   );
 };
 

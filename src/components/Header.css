@@ -19,11 +19,12 @@
 .header-container {
   max-width: var(--container-width);
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 52px;
+  min-height: 56px;
+  gap: 1rem;
 }
 
 /* ========== BRAND LOGO ========== */
@@ -37,6 +38,8 @@
   text-decoration: none;
   padding: 0.25rem 0;
   transition: all 0.3s ease;
+  flex-shrink: 0;
+  margin-left: 1rem;
 }
 
 .brand-logo:hover {
@@ -129,8 +132,9 @@
 }
 
 .nav-link svg {
-  font-size: 1rem;
-  color: var(--primary-gold) !important;
+  font-size: 1.1rem;
+  color: #D4AF37 !important;
+  filter: drop-shadow(0 0 2px rgba(212, 175, 55, 0.3));
 }
 
 /* ========== NAV SELECT DROPDOWNS ========== */
@@ -175,7 +179,29 @@
   margin: 0 0.5rem;
 }
 
-/* ========== USER INFO ========== */
+/* ========== HEADER USER AREA ========== */
+.header-user-area {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-right: 0.5rem;
+  padding-right: 1rem;
+  border-right: 1px solid rgba(212, 175, 55, 0.2);
+  flex-shrink: 0;
+}
+
+.user-role-badge {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(212, 175, 55, 0.1));
+  color: #D4AF37;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ========== USER INFO (Legacy) ========== */
 .user-info {
   display: flex;
   align-items: center;

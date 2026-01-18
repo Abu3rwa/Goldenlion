@@ -5,6 +5,41 @@
     direction: rtl;
 }
 
+/* Badge Styles */
+.users-page .badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.users-page .badge.gold {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.1));
+    color: #D4AF37;
+    border: 1px solid rgba(212, 175, 55, 0.4);
+}
+
+.users-page .badge.success {
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.2), rgba(46, 204, 113, 0.1));
+    color: #27AE60;
+    border: 1px solid rgba(46, 204, 113, 0.4);
+}
+
+.users-page .badge.info {
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(52, 152, 219, 0.1));
+    color: #3498DB;
+    border: 1px solid rgba(52, 152, 219, 0.4);
+}
+
+.users-page .badge.pending {
+    background: rgba(108, 117, 125, 0.1);
+    color: #6C757D;
+    border: 1px solid rgba(108, 117, 125, 0.3);
+}
+
 .users-page h1 {
     margin-bottom: 1.5rem;
     color: var(--dark-slate);

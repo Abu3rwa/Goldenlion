@@ -10,6 +10,7 @@ import { userService } from './services/userService';
 import { fetchProducts } from './store/productsSlice';
 
 import Header from './components/Header';
+import LandingPage from './pages/LandingPage';
 import DashboardPage from './pages/DashboardPage';
 import AddProductPage from './pages/AddProductPage';
 import EditProductPage from './pages/EditProductPage';
@@ -24,12 +25,15 @@ import TransactionsPage from './pages/TransactionsPage';
 import UsersPage from './pages/UsersPage';
 import CategoriesPage from './pages/CategoriesPage';
 import PrivateRoute from './components/PrivateRoute';
+// Public Store Page
+import StorePage from './pages/StorePage';
 // Store Management Pages
 import StoreDashboard from './pages/admin/store/StoreDashboard';
 import StoreProducts from './pages/admin/store/StoreProducts';
 import StoreProductForm from './pages/admin/store/StoreProductForm';
 import StoreCities from './pages/admin/store/StoreCities';
 import StoreOrders from './pages/admin/store/StoreOrders';
+import Loading from './components/Loading';
 import './App.css';
 
 function App() {
@@ -70,15 +74,7 @@ function App() {
   }, [dispatch]);
 
   if (loading) {
-    return (
-      <div style={{
-        textAlign: 'center',
-        marginTop: '50px',
-        fontFamily: 'Tajwal, sans-serif'
-      }}>
-        جاري التحميل...
-      </div>
-    );
+    return <Loading />
   }
 
   return (
@@ -87,11 +83,16 @@ function App() {
         <Header />
         <main className="container-fluid py-4 px-3 px-md-4">
           <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/store" element={<StorePage />} />
+
+            {/* Inventory Dashboard - Owner & Accountant only */}
             <Route
-              path="/"
+              path="/dashboard"
               element={
-                <PrivateRoute>
+                <PrivateRoute requiredPermission="VIEW_ALL_PAGES">
                   <DashboardPage />
                 </PrivateRoute>
               }

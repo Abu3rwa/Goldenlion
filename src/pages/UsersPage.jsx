@@ -97,6 +97,7 @@ const UsersPage = () => {
             case USER_ROLES.OWNER: return 'مالك';
             case USER_ROLES.ACCOUNTANT: return 'محاسب';
             case USER_ROLES.STAFF: return 'موظف';
+            case USER_ROLES.SALES_MANAGER: return 'مدير مبيعات';
             default: return role;
         }
     };
@@ -173,6 +174,8 @@ const UsersPage = () => {
                                     onChange={(e) => setInviteRole(e.target.value)}
                                 >
                                     <option value="accountant">محاسب</option>
+                                    <option value="sales_manager">مدير مبيعات</option>
+                                    <option value="staff">موظف</option>
                                     <option value="owner">مالك</option>
                                 </select>
                             </div>
@@ -270,7 +273,7 @@ const UsersPage = () => {
                                             <small className="text-light">ID: {u.id.substring(0, 8)}...</small>
                                         </td>
                                         <td>
-                                            <span className={`badge ${u.role === 'owner' ? 'gold' : u.role === 'accountant' ? 'success' : 'pending'}`}>
+                                            <span className={`badge ${u.role === 'owner' ? 'gold' : u.role === 'accountant' ? 'success' : u.role === 'sales_manager' ? 'info' : 'pending'}`}>
                                                 {getRoleLabel(u.role)}
                                             </span>
                                         </td>
@@ -295,6 +298,7 @@ const UsersPage = () => {
                                                 >
                                                     <option value={USER_ROLES.STAFF}>موظف</option>
                                                     <option value={USER_ROLES.ACCOUNTANT}>محاسب</option>
+                                                    <option value={USER_ROLES.SALES_MANAGER}>مدير مبيعات</option>
                                                     <option value={USER_ROLES.OWNER}>مالك</option>
                                                 </select>
                                             )}

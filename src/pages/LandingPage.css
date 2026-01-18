@@ -1,0 +1,596 @@
+/* ========================================
+   GOLDEN LION - LANDING PAGE
+   Public landing page for visitors
+   ======================================== */
+
+.landing-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1A1A1A 0%, #2D2D2D 50%, #1A1A1A 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ========== HERO SECTION ========== */
+.hero-section {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5rem 2rem;
+    position: relative;
+    overflow: hidden;
+    min-height: 70vh;
+}
+
+.hero-content {
+    text-align: center;
+    z-index: 2;
+}
+
+.hero-logo {
+    margin-bottom: 1.5rem;
+}
+
+.hero-logo .lion-icon {
+    font-size: 7rem;
+    color: #D4AF37;
+    filter: drop-shadow(0 0 40px rgba(212, 175, 55, 0.5));
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.hero-title {
+    font-size: 4rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem 0;
+    background: linear-gradient(135deg, #D4AF37 0%, #F4D03F 50%, #D4AF37 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+}
+
+.hero-subtitle {
+    font-size: 1.4rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0 0 2.5rem 0;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-primary-gold {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2.5rem;
+    background: linear-gradient(135deg, #D4AF37 0%, #C5A028 100%);
+    color: #1A1A1A;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 25px rgba(212, 175, 55, 0.4);
+}
+
+.btn-primary-gold:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 35px rgba(212, 175, 55, 0.6);
+    color: #1A1A1A;
+}
+
+.btn-outline-gold {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2.5rem;
+    background: transparent;
+    color: #D4AF37;
+    font-weight: 600;
+    font-size: 1.1rem;
+    border: 2px solid #D4AF37;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-gold:hover {
+    background: rgba(212, 175, 55, 0.15);
+    color: #F4D03F;
+    border-color: #F4D03F;
+}
+
+.hero-decoration {
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, rgba(212, 175, 55, 0.12) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}
+
+/* ========== FEATURED PRODUCTS SECTION ========== */
+.featured-products-section {
+    padding: 5rem 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.featured-products-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.featured-products-header h2 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: white;
+    margin: 0 0 0.75rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.featured-products-header h2 .text-gold {
+    color: #D4AF37;
+}
+
+.featured-products-header p {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+}
+
+.featured-products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+}
+
+.featured-product-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(212, 175, 55, 0.15);
+    border-radius: 16px;
+    overflow: hidden;
+    text-decoration: none;
+    transition: all 0.4s ease;
+    display: block;
+}
+
+.featured-product-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(212, 175, 55, 0.4);
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.featured-product-image-wrapper {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.featured-product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.featured-product-card:hover .featured-product-image {
+    transform: scale(1.08);
+}
+
+.featured-product-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.featured-product-placeholder svg {
+    font-size: 4rem;
+    color: rgba(255, 255, 255, 0.15);
+}
+
+.featured-product-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%);
+    color: #1A1A1A;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.featured-product-info {
+    padding: 1.25rem;
+}
+
+.featured-product-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.featured-product-price {
+    font-size: 1.2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.featured-products-cta {
+    text-align: center;
+    margin-top: 2.5rem;
+}
+
+.btn-view-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 2rem;
+    background: transparent;
+    color: #D4AF37;
+    font-weight: 600;
+    font-size: 1rem;
+    border: 2px solid rgba(212, 175, 55, 0.5);
+    border-radius: 50px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-view-all:hover {
+    background: rgba(212, 175, 55, 0.1);
+    border-color: #D4AF37;
+    color: #F4D03F;
+}
+
+/* ========== FEATURES SECTION ========== */
+.features-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    padding: 5rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.feature-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 20px;
+    padding: 2.5rem;
+    text-align: center;
+    transition: all 0.4s ease;
+}
+
+.feature-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(212, 175, 55, 0.4);
+    transform: translateY(-8px);
+}
+
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.1));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    border: 2px solid rgba(212, 175, 55, 0.3);
+}
+
+.feature-icon svg {
+    font-size: 2.25rem;
+    color: #D4AF37;
+}
+
+.feature-card h3 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: white;
+    margin: 0 0 0.75rem 0;
+}
+
+.feature-card p {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* ========== WHATSAPP SECTION ========== */
+.whatsapp-section {
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, rgba(37, 211, 102, 0.1) 0%, rgba(18, 140, 126, 0.1) 100%);
+    border-top: 1px solid rgba(37, 211, 102, 0.2);
+    border-bottom: 1px solid rgba(37, 211, 102, 0.2);
+}
+
+.whatsapp-content {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    text-align: center;
+}
+
+.whatsapp-icon {
+    font-size: 4rem;
+    color: #25D366;
+    filter: drop-shadow(0 0 20px rgba(37, 211, 102, 0.4));
+}
+
+.whatsapp-text h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    margin: 0 0 0.25rem 0;
+}
+
+.whatsapp-text p {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+}
+
+.btn-whatsapp {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
+}
+
+.btn-whatsapp:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(37, 211, 102, 0.5);
+}
+
+/* ========== FOOTER ========== */
+.landing-footer {
+    padding: 3rem 2rem;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: auto;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footer-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.footer-logo {
+    font-size: 2rem;
+    color: #D4AF37;
+}
+
+.footer-brand span {
+    font-size: 1.25rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.footer-copyright {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.9rem;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 992px) {
+    .hero-section {
+        min-height: 60vh;
+        padding: 4rem 1.5rem;
+    }
+
+    .hero-logo .lion-icon {
+        font-size: 5rem;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+    }
+
+    .featured-products-section {
+        padding: 4rem 1.5rem;
+    }
+
+    .features-section {
+        padding: 4rem 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        min-height: auto;
+        padding: 3rem 1.5rem;
+    }
+
+    .hero-logo .lion-icon {
+        font-size: 4rem;
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.1rem;
+    }
+
+    .hero-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .btn-primary-gold,
+    .btn-outline-gold {
+        width: 100%;
+        max-width: 280px;
+        justify-content: center;
+    }
+
+    .featured-products-section {
+        padding: 3rem 1rem;
+    }
+
+    .featured-products-header h2 {
+        font-size: 1.75rem;
+    }
+
+    .featured-products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .featured-product-card {
+        border-radius: 12px;
+    }
+
+    .featured-product-info {
+        padding: 1rem;
+    }
+
+    .featured-product-name {
+        font-size: 0.9rem;
+    }
+
+    .featured-product-price {
+        font-size: 1rem;
+    }
+
+    .features-section {
+        padding: 3rem 1.5rem;
+    }
+
+    .feature-card {
+        padding: 2rem;
+    }
+
+    .whatsapp-content {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .whatsapp-icon {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+
+    .featured-products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .featured-product-badge {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.65rem;
+    }
+
+    .featured-product-info {
+        padding: 0.75rem;
+    }
+
+    .featured-product-name {
+        font-size: 0.85rem;
+        -webkit-line-clamp: 1;
+    }
+
+    .featured-product-price {
+        font-size: 0.95rem;
+    }
+
+    .feature-card {
+        padding: 1.5rem;
+    }
+
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+    }
+
+    .feature-icon svg {
+        font-size: 1.75rem;
+    }
+
+    .feature-card h3 {
+        font-size: 1.1rem;
+    }
+
+    .feature-card p {
+        font-size: 0.9rem;
+    }
+}
