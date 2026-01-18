@@ -17,7 +17,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 5rem 2rem;
+    padding: 3rem 2rem;
     position: relative;
     overflow: hidden;
     min-height: 70vh;
@@ -130,7 +130,7 @@
 
 /* ========== FEATURED PRODUCTS SECTION ========== */
 .featured-products-section {
-    padding: 5rem 2rem;
+    padding: 3rem 2rem;
     max-width: 1400px;
     margin: 0 auto;
     width: 100%;
@@ -164,7 +164,7 @@
 
 .featured-products-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1.5rem;
 }
 
@@ -187,7 +187,7 @@
 
 .featured-product-image-wrapper {
     position: relative;
-    aspect-ratio: 1;
+    aspect-ratio: 4/3;
     overflow: hidden;
     background: rgba(255, 255, 255, 0.02);
 }
@@ -288,7 +288,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 2rem;
-    padding: 5rem 2rem;
+    padding: 3rem 2rem;
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
