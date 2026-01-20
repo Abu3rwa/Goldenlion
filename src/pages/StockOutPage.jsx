@@ -31,7 +31,7 @@ const StockOutPage = () => {
     const [validationError, setValidationError] = useState('');
     const [lastTransaction, setLastTransaction] = useState(null);
 
-    const canCreateTransaction = userService.canPerformAction(userProfile?.role, 'CREATE_TRANSACTION');
+    const canCreateTransaction = userService.canPerformAction(userProfile?.roles || [], 'CREATE_TRANSACTION');
 
     useEffect(() => {
         dispatch(fetchProducts());

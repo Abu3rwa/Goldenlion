@@ -19,7 +19,7 @@ const ProductForm = () => {
 
   const { suppliers } = useSelector((state) => state.suppliers);
   const { categories } = useSelector((state) => state.categories);
-  const canManageInventory = userService.canPerformAction(userProfile?.role, 'MANAGE_INVENTORY');
+  const canManageInventory = userService.canPerformAction(userProfile?.roles || [], 'MANAGE_INVENTORY');
 
   const [code, setCode] = useState('');
   const [name, setName] = useState('');

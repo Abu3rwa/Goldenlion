@@ -81,6 +81,22 @@ export const publicOrderService = {
     createOrder: async (orderData) => {
         const orderNumber = generateOrderNumber();
 
+        // Prepare items with color info and cost
+        const orderItems = orderData.items.map(item => ({
+            productId: item.productId,
+            productName: item.productName,
+            price: item.price,
+            costPrice: item.costPrice || 0,
+            quantity: item.quantity,
+            subtotal: item.price * item.quantity,
+            selectedColor: item.selectedColor || null
+        }));
+
+        // Calculate profit
+        const totalRevenue = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
+        const totalCost = orderItems.reduce((sum, item) => sum + (item.costPrice * item.quantity), 0);
+        const estimatedProfit = totalRevenue - totalCost;
+
         const newOrder = {
             orderNumber,
             customer: {
@@ -92,15 +108,11 @@ export const publicOrderService = {
             cityId: orderData.cityId,
             cityName: orderData.cityName,
             deliveryCharge: orderData.deliveryCharge,
-            items: orderData.items.map(item => ({
-                productId: item.productId,
-                productName: item.productName,
-                price: item.price,
-                quantity: item.quantity,
-                subtotal: item.price * item.quantity
-            })),
+            items: orderItems,
             subtotal: orderData.subtotal,
             total: orderData.total,
+            totalCost: totalCost,
+            estimatedProfit: estimatedProfit,
             status: ORDER_STATUS.PENDING,
             paymentMethod: 'cash',
             paymentStatus: PAYMENT_STATUS.UNPAID,
@@ -110,6 +122,26 @@ export const publicOrderService = {
         };
 
         const docRef = await addDoc(collection(db, COLLECTIONS.PUBLIC_ORDERS), newOrder);
+
+        // Deduct stock for each item with color variant
+        // This is done after order creation to ensure order is saved first
+        // In production, consider using transactions for atomicity
+        for (const item of orderItems) {
+            if (item.selectedColor) {
+                try {
+                    // Import dynamically to avoid circular dependency
+                    const { publicProductService } = await import('./publicProductService');
+                    await publicProductService.deductVariantStock(
+                        item.productId,
+                        item.selectedColor.color,
+                        item.quantity
+                    );
+                } catch (err) {
+                    console.error('Failed to deduct stock:', err);
+                    // Continue - order is already placed
+                }
+            }
+        }
 
         return serializeFirestoreData({
             id: docRef.id,
@@ -173,7 +205,9 @@ export const publicOrderService = {
             shipped: 0,
             delivered: 0,
             cancelled: 0,
-            totalRevenue: 0
+            totalRevenue: 0,
+            totalCost: 0,
+            totalProfit: 0
         };
 
         querySnapshot.docs.forEach(doc => {
@@ -181,7 +215,9 @@ export const publicOrderService = {
             stats.total++;
             stats[order.status]++;
             if (order.status === ORDER_STATUS.DELIVERED) {
-                stats.totalRevenue += order.total;
+                stats.totalRevenue += order.total || 0;
+                stats.totalCost += order.totalCost || 0;
+                stats.totalProfit += order.estimatedProfit || (order.total - (order.totalCost || 0));
             }
         });
 

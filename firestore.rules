@@ -12,32 +12,45 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
     
-    function getUserRole() {
-      return getUserData().role;
+    // New: Get user roles array
+    function getUserRoles() {
+      let userData = getUserData();
+      // Return roles array, or wrap single role in array for backward compatibility
+      return userData.roles != null ? userData.roles : (userData.role != null ? [userData.role] : ['staff']);
+    }
+    
+    // New: Check if user has a specific role
+    function hasRole(role) {
+      return isAuthenticated() && role in getUserRoles();
+    }
+    
+    // New: Check if user has any of the specified roles
+    function hasAnyRole(rolesList) {
+      return isAuthenticated() && getUserRoles().hasAny(rolesList);
     }
     
     function isOwner() {
-      return isAuthenticated() && getUserRole() == 'owner';
+      return hasRole('owner');
     }
     
     function isAccountant() {
-      return isAuthenticated() && getUserRole() == 'accountant';
+      return hasRole('accountant');
     }
     
     function isStaff() {
-      return isAuthenticated() && getUserRole() == 'staff';
+      return hasRole('staff');
     }
     
     function isAccountantOrOwner() {
-      return isOwner() || isAccountant();
+      return hasAnyRole(['owner', 'accountant']);
     }
     
     function isSalesManager() {
-      return isAuthenticated() && getUserRole() == 'sales_manager';
+      return hasRole('sales_manager');
     }
     
     function isSalesManagerOrOwner() {
-      return isOwner() || isSalesManager();
+      return hasAnyRole(['owner', 'sales_manager']);
     }
     
     // ===== Users Collection =====
@@ -49,10 +62,10 @@ service cloud.firestore {
       allow create: if isAuthenticated() && request.auth.uid == userId;
       
       // Only owners can update other users' roles
-      // Users can update their own profile (except role)
+      // Users can update their own profile (except roles)
       allow update: if isOwner() || 
         (request.auth.uid == userId && 
-         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'roles']));
       
       // Never delete users
       allow delete: if false;

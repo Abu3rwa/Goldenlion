@@ -28,7 +28,9 @@ const StoreCities = () => {
     const [deliveryCharge, setDeliveryCharge] = useState('');
     const [estimatedDays, setEstimatedDays] = useState('2-3');
 
-    const canManage = userService.canPerformAction(userProfile?.role, 'MANAGE_DELIVERY_CITIES');
+    // Get roles array from profile
+    const roles = userProfile?.roles || [];
+    const canManage = userService.canPerformAction(roles, 'MANAGE_DELIVERY_CITIES');
 
     useEffect(() => {
         dispatch(fetchAllCities());

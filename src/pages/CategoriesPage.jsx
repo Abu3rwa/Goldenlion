@@ -13,7 +13,7 @@ const CategoriesPage = () => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
 
-    const canManage = userService.canPerformAction(userProfile?.role, 'MANAGE_INVENTORY');
+    const canManage = userService.canPerformAction(userProfile?.roles || [], 'MANAGE_INVENTORY');
 
     useEffect(() => {
         dispatch(fetchCategories());

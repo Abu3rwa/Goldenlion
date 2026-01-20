@@ -149,5 +149,50 @@ export const publicProductService = {
             updatedAt: serverTimestamp()
         });
         return { id, featured };
+    },
+
+    /**
+     * Deduct stock from color variant when order is placed
+     * @param {string} productId - Product ID
+     * @param {string} colorName - Color name to deduct from
+     * @param {number} quantity - Quantity to deduct
+     */
+    deductVariantStock: async (productId, colorName, quantity) => {
+        const productRef = doc(db, COLLECTIONS.PUBLIC_PRODUCTS, productId);
+        const productSnap = await getDoc(productRef);
+
+        if (!productSnap.exists()) {
+            throw new Error('Product not found');
+        }
+
+        const productData = productSnap.data();
+        const colorVariants = productData.colorVariants || [];
+
+        // Find and update the variant
+        const updatedVariants = colorVariants.map(variant => {
+            if (variant.color === colorName) {
+                const newQty = Math.max(0, (variant.quantity || 0) - quantity);
+                return { ...variant, quantity: newQty };
+            }
+            return variant;
+        });
+
+        // Calculate new total stock
+        const newTotalStock = updatedVariants.reduce((sum, v) => sum + (v.quantity || 0), 0);
+
+        // Update product
+        await updateDoc(productRef, {
+            colorVariants: updatedVariants,
+            totalStock: newTotalStock,
+            inStock: newTotalStock > 0,
+            updatedAt: serverTimestamp()
+        });
+
+        return {
+            id: productId,
+            colorVariants: updatedVariants,
+            totalStock: newTotalStock,
+            inStock: newTotalStock > 0
+        };
     }
 };

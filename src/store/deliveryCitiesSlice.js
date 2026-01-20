@@ -76,8 +76,16 @@ const deliveryCitiesSlice = createSlice({
                 state.error = action.error.message;
             })
             // Fetch Active
+            .addCase(fetchActiveCities.pending, (state) => {
+                state.status = 'loading';
+            })
             .addCase(fetchActiveCities.fulfilled, (state, action) => {
+                state.status = 'succeeded';
                 state.cities = action.payload;
+            })
+            .addCase(fetchActiveCities.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.error.message;
             })
             // Add
             .addCase(addCity.fulfilled, (state, action) => {

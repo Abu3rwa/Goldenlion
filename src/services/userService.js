@@ -13,6 +13,7 @@ import { serializeFirestoreData } from '../utils/serialization';
 
 /**
  * User Service - Manages user profiles and roles
+ * Uses ONLY roles array (not single role field)
  */
 export const userService = {
     /**
@@ -23,7 +24,12 @@ export const userService = {
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists()) {
-            return serializeFirestoreData({ id: userSnap.id, ...userSnap.data() });
+            const data = userSnap.data();
+            return serializeFirestoreData({
+                id: userSnap.id,
+                ...data,
+                roles: data.roles || [USER_ROLES.STAFF] // Default to staff if no roles
+            });
         }
         return null;
     },
@@ -31,41 +37,45 @@ export const userService = {
     /**
      * Create or update user profile on login/register
      * @param {object} user - Firebase user object
-     * @param {string} assignedRole - Role from invite (optional, defaults to STAFF)
+     * @param {string[]} assignedRoles - Roles from invite (optional)
      */
-    ensureUserProfile: async (user, assignedRole = null) => {
+    ensureUserProfile: async (user, assignedRoles = null) => {
         const userRef = doc(db, COLLECTIONS.USERS, user.uid);
         const userSnap = await getDoc(userRef);
 
         if (!userSnap.exists()) {
-            // First time user - create profile with assigned role from invite or default
-            const role = assignedRole || USER_ROLES.STAFF;
+            // First time user - create profile with assigned roles
+            const roles = assignedRoles && assignedRoles.length > 0
+                ? assignedRoles
+                : [USER_ROLES.STAFF];
+
             const newUserProfile = {
                 email: user.email,
                 displayName: user.displayName || user.email,
-                role: role,
+                roles: roles,
                 isActive: true,
                 createdAt: serverTimestamp(),
                 lastLoginAt: serverTimestamp()
             };
             await setDoc(userRef, newUserProfile);
-            // We return the raw object here because serverTimestamp hasn't resolved to a date yet in the local object,
-            // but we want to return something serializable or at least consistent.
-            // Ideally we'd fetch it back, but optimization: just return what we know.
-            // serverTimestamp() is NOT serializable, so we can't return it directly to Redux if we constructed it here.
-            // We should strip timestamps or use current date for local state.
+
             return {
                 id: user.uid,
                 email: user.email,
                 displayName: user.displayName || user.email,
-                role: role
+                roles: roles
             };
         } else {
             // Update last login
             await updateDoc(userRef, {
                 lastLoginAt: serverTimestamp()
             });
-            return serializeFirestoreData({ id: userSnap.id, ...userSnap.data() });
+            const data = userSnap.data();
+            return serializeFirestoreData({
+                id: userSnap.id,
+                ...data,
+                roles: data.roles || [USER_ROLES.STAFF]
+            });
         }
     },
 
@@ -74,47 +84,63 @@ export const userService = {
      */
     getAllUsers: async () => {
         const querySnapshot = await getDocs(collection(db, COLLECTIONS.USERS));
-        const users = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+        const users = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                roles: data.roles || [USER_ROLES.STAFF]
+            };
+        });
         return serializeFirestoreData(users);
     },
 
     /**
-     * Update user role (owner only)
+     * Update user roles (owner only)
+     * @param {string} userId - User ID
+     * @param {string[]} newRoles - Array of role strings
      */
-    updateUserRole: async (userId, newRole) => {
+    updateUserRoles: async (userId, newRoles) => {
         const currentUser = auth.currentUser;
         if (!currentUser) {
             throw new Error('Not authenticated');
         }
 
-        // Get current user's role to verify they're owner
+        // Get current user's roles to verify they're owner
         const currentUserProfile = await userService.getUserProfile(currentUser.uid);
-        if (currentUserProfile?.role !== USER_ROLES.OWNER) {
+        if (!currentUserProfile?.roles?.includes(USER_ROLES.OWNER)) {
             throw new Error('Only owners can change user roles');
+        }
+
+        // Validate roles array
+        if (!Array.isArray(newRoles) || newRoles.length === 0) {
+            throw new Error('At least one role is required');
         }
 
         const userRef = doc(db, COLLECTIONS.USERS, userId);
         await updateDoc(userRef, {
-            role: newRole,
-            roleUpdatedAt: serverTimestamp(),
-            roleUpdatedBy: {
+            roles: newRoles,
+            rolesUpdatedAt: serverTimestamp(),
+            rolesUpdatedBy: {
                 uid: currentUser.uid,
                 email: currentUser.email
             }
         });
 
-        return { id: userId, role: newRole };
+        return { id: userId, roles: newRoles };
     },
 
     /**
      * Check if user has permission for an action
+     * @param {string[]} userRoles - Array of user roles
+     * @param {string} action - The action to check permission for
      */
-    canPerformAction: (userRole, action) => {
+    canPerformAction: (userRoles, action) => {
+        // Ensure it's an array
+        const roles = Array.isArray(userRoles) ? userRoles : [];
+
         const permissions = {
-            // Transactions (Stock IN/OUT) - Owner is OBSERVER ONLY
+            // Transactions (Stock IN/OUT)
             CREATE_TRANSACTION: [USER_ROLES.ACCOUNTANT],
             VIEW_TRANSACTIONS: [USER_ROLES.ACCOUNTANT, USER_ROLES.OWNER, USER_ROLES.STAFF],
 
@@ -124,7 +150,7 @@ export const userService = {
             // User management
             MANAGE_USERS: [USER_ROLES.OWNER],
 
-            // Products/Suppliers/Customers - Owner is OBSERVER ONLY
+            // Products/Suppliers/Customers
             MANAGE_INVENTORY: [USER_ROLES.ACCOUNTANT],
             VIEW_INVENTORY: [USER_ROLES.ACCOUNTANT, USER_ROLES.OWNER, USER_ROLES.STAFF],
 
@@ -134,13 +160,16 @@ export const userService = {
             // Costs visibility
             VIEW_COSTS: [USER_ROLES.ACCOUNTANT, USER_ROLES.OWNER],
 
-            // ===== PUBLIC STORE (Sales Manager) =====
+            // ===== PUBLIC STORE (Sales Manager + Owner only) =====
             MANAGE_PUBLIC_PRODUCTS: [USER_ROLES.SALES_MANAGER, USER_ROLES.OWNER],
             MANAGE_PUBLIC_ORDERS: [USER_ROLES.SALES_MANAGER, USER_ROLES.OWNER],
             MANAGE_DELIVERY_CITIES: [USER_ROLES.SALES_MANAGER, USER_ROLES.OWNER],
             VIEW_STORE_DASHBOARD: [USER_ROLES.SALES_MANAGER, USER_ROLES.OWNER],
         };
 
-        return permissions[action]?.includes(userRole) || false;
+        const allowedRoles = permissions[action] || [];
+
+        // Check if ANY of the user's roles has the required permission
+        return roles.some(role => allowedRoles.includes(role));
     }
 };

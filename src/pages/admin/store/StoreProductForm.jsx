@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { addPublicProduct, updatePublicProduct, fetchPublicProductById, clearCurrentProduct } from '../../../store/publicProductsSlice';
 import { toCents, fromCents } from '../../../utils/decimalUtils';
 import { userService } from '../../../services/userService';
-import { MdSave, MdArrowBack, MdAddPhotoAlternate, MdDelete } from 'react-icons/md';
+import { MdSave, MdArrowBack, MdAddPhotoAlternate, MdDelete, MdAdd, MdColorLens } from 'react-icons/md';
 import './StoreProductForm.css';
 
 const StoreProductForm = () => {
@@ -27,11 +27,21 @@ const StoreProductForm = () => {
     const [featured, setFeatured] = useState(false);
     const [hasDelivery, setHasDelivery] = useState(true);
     const [sortOrder, setSortOrder] = useState(0);
+    const [costPrice, setCostPrice] = useState('');
+
+    // Color Variants
+    const [colorVariants, setColorVariants] = useState([]);
+    const [newColor, setNewColor] = useState('');
+    const [newColorCode, setNewColorCode] = useState('#000000');
+    const [newColorQty, setNewColorQty] = useState('');
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const canManage = userService.canPerformAction(userProfile?.role, 'MANAGE_PUBLIC_PRODUCTS');
+    const canManage = userService.canPerformAction(
+        userProfile?.roles || [],
+        'MANAGE_PUBLIC_PRODUCTS'
+    );
 
     useEffect(() => {
         if (isEditing) {
@@ -54,6 +64,8 @@ const StoreProductForm = () => {
             setFeatured(currentProduct.featured || false);
             setHasDelivery(currentProduct.hasDelivery !== false);
             setSortOrder(currentProduct.sortOrder || 0);
+            setCostPrice(fromCents(currentProduct.costPrice || 0).toString());
+            setColorVariants(currentProduct.colorVariants || []);
         }
     }, [currentProduct, isEditing]);
 
@@ -67,6 +79,43 @@ const StoreProductForm = () => {
     const handleRemoveImage = (index) => {
         setImages(images.filter((_, i) => i !== index));
     };
+
+    // Color Variants Handlers
+    const handleAddColorVariant = () => {
+        if (!newColor.trim() || !newColorQty || parseInt(newColorQty) <= 0) return;
+
+        const exists = colorVariants.some(v => v.color.toLowerCase() === newColor.trim().toLowerCase());
+        if (exists) {
+            setError('هذا اللون موجود بالفعل');
+            return;
+        }
+
+        setColorVariants([
+            ...colorVariants,
+            {
+                color: newColor.trim(),
+                colorCode: newColorCode,
+                quantity: parseInt(newColorQty)
+            }
+        ]);
+        setNewColor('');
+        setNewColorCode('#000000');
+        setNewColorQty('');
+        setError('');
+    };
+
+    const handleRemoveColorVariant = (index) => {
+        setColorVariants(colorVariants.filter((_, i) => i !== index));
+    };
+
+    const handleUpdateVariantQty = (index, qty) => {
+        const updated = [...colorVariants];
+        updated[index].quantity = parseInt(qty) || 0;
+        setColorVariants(updated);
+    };
+
+    // Calculate total stock from variants
+    const totalStock = colorVariants.reduce((sum, v) => sum + (v.quantity || 0), 0);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -90,11 +139,14 @@ const StoreProductForm = () => {
             nameEn: nameEn.trim(),
             description: description.trim(),
             price: toCents(parseFloat(price)),
+            costPrice: toCents(parseFloat(costPrice) || 0),
             images,
-            inStock,
+            inStock: colorVariants.length > 0 ? totalStock > 0 : inStock,
             featured,
             hasDelivery,
-            sortOrder: parseInt(sortOrder) || 0
+            sortOrder: parseInt(sortOrder) || 0,
+            colorVariants: colorVariants,
+            totalStock: totalStock
         };
 
         try {
@@ -105,10 +157,12 @@ const StoreProductForm = () => {
             }
             navigate('/admin/store/products');
         } catch (err) {
-            setError(err.message || 'حدث خطأ أثناء الحفظ');
-        } finally {
+            console.error('Error saving product:', err);
+            setError(err?.message || 'حدث خطأ أثناء الحفظ');
             setLoading(false);
+            return; // Prevent any further action
         }
+        setLoading(false);
     };
 
     if (!canManage) {
@@ -121,12 +175,12 @@ const StoreProductForm = () => {
 
     return (
         <div className="store-product-form">
-            <div className="d-flex align-items-center gap-3 mb-4">
-                <button className="btn btn-outline-secondary" onClick={() => navigate(-1)}>
+            <div className="page-header d-flex align-items-center gap-3 mb-4">
+                <button type="button" className="btn btn-outline-secondary" onClick={() => navigate(-1)}>
                     <MdArrowBack />
                 </button>
                 <h1 className="h3 mb-0">
-                    {isEditing ? 'تعديل منتج' : 'إضافة منتج جديد'}
+                    {isEditing ? '✏️ تعديل منتج' : '✨ إضافة منتج جديد'}
                 </h1>
             </div>
 
@@ -137,63 +191,53 @@ const StoreProductForm = () => {
             )}
 
             <form onSubmit={handleSubmit}>
-                <div className="row g-4">
-                    {/* Main Info */}
-                    <div className="col-lg-8">
-                        <div className="card border-0 shadow-sm">
-                            <div className="card-header bg-white py-3">
-                                <h5 className="mb-0 fw-bold">معلومات المنتج</h5>
+                <div className="row g-3">
+                    {/* Left Column - Basic Info & Images */}
+                    <div className="col-lg-6">
+                        <div className="card border-0 shadow-sm h-100">
+                            <div className="card-header bg-white py-2">
+                                <h6 className="mb-0 fw-bold">معلومات المنتج</h6>
                             </div>
-                            <div className="card-body">
-                                <div className="row g-3">
-                                    <div className="col-md-4">
-                                        <label className="form-label">كود المنتج</label>
+                            <div className="card-body py-2">
+                                <div className="row g-2">
+                                    <div className="col-6">
+                                        <label className="form-label small mb-1">اسم المنتج *</label>
                                         <input
                                             type="text"
-                                            className="form-control"
-                                            value={code}
-                                            onChange={(e) => setCode(e.target.value)}
-                                            placeholder="مثال: BAG-001"
-                                            dir="ltr"
-                                        />
-                                    </div>
-                                    <div className="col-md-4">
-                                        <label className="form-label">اسم المنتج (عربي) *</label>
-                                        <input
-                                            type="text"
-                                            className="form-control"
+                                            className="form-control form-control-sm"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
-                                            placeholder="مثال: شنطة كتف أنيقة"
+                                            placeholder="شنطة كتف أنيقة"
                                             required
                                         />
                                     </div>
-                                    <div className="col-md-4">
-                                        <label className="form-label">اسم المنتج (إنجليزي)</label>
+                                    <div className="col-6">
+                                        <label className="form-label small mb-1">الاسم بالإنجليزية</label>
                                         <input
                                             type="text"
-                                            className="form-control"
+                                            className="form-control form-control-sm"
                                             value={nameEn}
                                             onChange={(e) => setNameEn(e.target.value)}
-                                            placeholder="Elegant Shoulder Bag"
+                                            placeholder="Shoulder Bag"
                                             dir="ltr"
                                         />
                                     </div>
-                                    <div className="col-12">
-                                        <label className="form-label">الوصف</label>
-                                        <textarea
-                                            className="form-control"
-                                            value={description}
-                                            onChange={(e) => setDescription(e.target.value)}
-                                            rows="3"
-                                            placeholder="وصف تفصيلي للمنتج..."
+                                    <div className="col-4">
+                                        <label className="form-label small mb-1">الكود</label>
+                                        <input
+                                            type="text"
+                                            className="form-control form-control-sm"
+                                            value={code}
+                                            onChange={(e) => setCode(e.target.value)}
+                                            placeholder="BAG-001"
+                                            dir="ltr"
                                         />
                                     </div>
-                                    <div className="col-md-6">
-                                        <label className="form-label">السعر (د.ل) *</label>
+                                    <div className="col-4">
+                                        <label className="form-label small mb-1">سعر البيع *</label>
                                         <input
                                             type="number"
-                                            className="form-control"
+                                            className="form-control form-control-sm"
                                             value={price}
                                             onChange={(e) => setPrice(e.target.value)}
                                             min="0"
@@ -201,125 +245,219 @@ const StoreProductForm = () => {
                                             required
                                         />
                                     </div>
-                                    <div className="col-md-6">
-                                        <label className="form-label">ترتيب العرض</label>
+                                    <div className="col-4">
+                                        <label className="form-label small mb-1">سعر التكلفة</label>
                                         <input
                                             type="number"
-                                            className="form-control"
-                                            value={sortOrder}
-                                            onChange={(e) => setSortOrder(e.target.value)}
+                                            className="form-control form-control-sm"
+                                            value={costPrice}
+                                            onChange={(e) => setCostPrice(e.target.value)}
                                             min="0"
+                                            step="0.01"
                                         />
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Images */}
-                        <div className="card border-0 shadow-sm mt-4">
-                            <div className="card-header bg-white py-3">
-                                <h5 className="mb-0 fw-bold">صور المنتج</h5>
-                            </div>
-                            <div className="card-body">
-                                <div className="input-group mb-3">
-                                    <input
-                                        type="url"
-                                        className="form-control"
-                                        value={newImageUrl}
-                                        onChange={(e) => setNewImageUrl(e.target.value)}
-                                        placeholder="رابط الصورة (https://...)"
-                                        dir="ltr"
-                                    />
-                                    <button
-                                        type="button"
-                                        className="btn btn-outline-gold"
-                                        onClick={handleAddImage}
-                                    >
-                                        <MdAddPhotoAlternate /> إضافة
-                                    </button>
-                                </div>
-
-                                {images.length > 0 && (
-                                    <div className="row g-2">
-                                        {images.map((img, index) => (
-                                            <div key={index} className="col-4 col-md-3">
-                                                <div className="image-preview-item">
-                                                    <img src={img} alt={`صورة ${index + 1}`} />
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-sm btn-danger remove-btn"
-                                                        onClick={() => handleRemoveImage(index)}
-                                                    >
-                                                        <MdDelete />
-                                                    </button>
-                                                    {index === 0 && (
-                                                        <span className="main-badge">رئيسية</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
+                                    <div className="col-12">
+                                        <label className="form-label small mb-1">الوصف</label>
+                                        <textarea
+                                            className="form-control form-control-sm"
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            rows="2"
+                                            placeholder="وصف المنتج..."
+                                        />
                                     </div>
-                                )}
+                                    {/* Compact Image Input */}
+                                    <div className="col-12">
+                                        <label className="form-label small mb-1">صور المنتج</label>
+                                        <div className="input-group input-group-sm">
+                                            <input
+                                                type="url"
+                                                className="form-control"
+                                                value={newImageUrl}
+                                                onChange={(e) => setNewImageUrl(e.target.value)}
+                                                placeholder="رابط الصورة"
+                                                dir="ltr"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="btn btn-outline-gold"
+                                                onClick={handleAddImage}
+                                            >
+                                                <MdAddPhotoAlternate />
+                                            </button>
+                                        </div>
+                                        {images.length > 0 && (
+                                            <div className="d-flex flex-wrap gap-2 mt-2">
+                                                {images.map((img, index) => (
+                                                    <div key={index} className="image-thumb">
+                                                        <img src={img} alt={`صورة ${index + 1}`} />
+                                                        <button
+                                                            type="button"
+                                                            className="remove-btn"
+                                                            onClick={() => handleRemoveImage(index)}
+                                                        >×</button>
+                                                        {index === 0 && <span className="main-tag">رئيسية</span>}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Sidebar */}
-                    <div className="col-lg-4">
-                        <div className="card border-0 shadow-sm sticky-top" style={{ top: '20px' }}>
-                            <div className="card-header bg-white py-3">
-                                <h5 className="mb-0 fw-bold">الإعدادات</h5>
+                    {/* Right Column - Colors & Settings */}
+                    <div className="col-lg-6">
+                        <div className="row g-3">
+                            {/* Color Variants */}
+                            <div className="col-12">
+                                <div className="card border-0 shadow-sm">
+                                    <div className="card-header bg-white py-2 d-flex justify-content-between align-items-center">
+                                        <h6 className="mb-0 fw-bold">
+                                            <MdColorLens className="me-1" /> الألوان والمخزون
+                                        </h6>
+                                        {colorVariants.length > 0 && (
+                                            <span className="badge bg-gold text-dark">المخزون: {totalStock}</span>
+                                        )}
+                                    </div>
+                                    <div className="card-body py-2">
+                                        <div className="row g-2 align-items-end mb-2">
+                                            <div className="col-5">
+                                                <input
+                                                    type="text"
+                                                    className="form-control form-control-sm"
+                                                    value={newColor}
+                                                    onChange={(e) => setNewColor(e.target.value)}
+                                                    placeholder="اسم اللون"
+                                                />
+                                            </div>
+                                            <div className="col-2">
+                                                <input
+                                                    type="color"
+                                                    className="form-control form-control-sm form-control-color w-100"
+                                                    value={newColorCode}
+                                                    onChange={(e) => setNewColorCode(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="col-3">
+                                                <input
+                                                    type="number"
+                                                    className="form-control form-control-sm"
+                                                    value={newColorQty}
+                                                    onChange={(e) => setNewColorQty(e.target.value)}
+                                                    min="1"
+                                                    placeholder="الكمية"
+                                                />
+                                            </div>
+                                            <div className="col-2">
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-gold w-100"
+                                                    onClick={handleAddColorVariant}
+                                                    disabled={!newColor.trim() || !newColorQty}
+                                                >
+                                                    <MdAdd />
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {colorVariants.length > 0 ? (
+                                            <div className="color-list">
+                                                {colorVariants.map((variant, index) => (
+                                                    <div key={index} className="color-item">
+                                                        <span
+                                                            className="color-dot"
+                                                            style={{ backgroundColor: variant.colorCode }}
+                                                        />
+                                                        <span className="color-name">{variant.color}</span>
+                                                        <input
+                                                            type="number"
+                                                            className="qty-input"
+                                                            value={variant.quantity}
+                                                            onChange={(e) => handleUpdateVariantQty(index, e.target.value)}
+                                                            min="0"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            className="delete-btn"
+                                                            onClick={() => handleRemoveColorVariant(index)}
+                                                        >
+                                                            <MdDelete />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-muted small text-center mb-0 py-2">أضف ألوان المنتج</p>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                            <div className="card-body">
-                                <div className="form-check form-switch mb-3">
-                                    <input
-                                        className="form-check-input"
-                                        type="checkbox"
-                                        id="inStock"
-                                        checked={inStock}
-                                        onChange={(e) => setInStock(e.target.checked)}
-                                    />
-                                    <label className="form-check-label" htmlFor="inStock">
-                                        متوفر في المخزون
-                                    </label>
-                                </div>
-                                <div className="form-check form-switch mb-3">
-                                    <input
-                                        className="form-check-input"
-                                        type="checkbox"
-                                        id="featured"
-                                        checked={featured}
-                                        onChange={(e) => setFeatured(e.target.checked)}
-                                    />
-                                    <label className="form-check-label" htmlFor="featured">
-                                        منتج مميز (يظهر في الصفحة الرئيسية)
-                                    </label>
-                                </div>
-                                <div className="form-check form-switch mb-4">
-                                    <input
-                                        className="form-check-input"
-                                        type="checkbox"
-                                        id="hasDelivery"
-                                        checked={hasDelivery}
-                                        onChange={(e) => setHasDelivery(e.target.checked)}
-                                    />
-                                    <label className="form-check-label" htmlFor="hasDelivery">
-                                        يمكن توصيله
-                                    </label>
-                                </div>
 
-                                <button
-                                    type="submit"
-                                    className="btn btn-gold w-100"
-                                    disabled={loading}
-                                >
-                                    {loading ? (
-                                        <span className="spinner-border spinner-border-sm me-2" />
-                                    ) : (
-                                        <MdSave className="me-2" />
-                                    )}
-                                    {isEditing ? 'حفظ التعديلات' : 'إضافة المنتج'}
-                                </button>
+                            {/* Settings & Submit */}
+                            <div className="col-12">
+                                <div className="card border-0 shadow-sm">
+                                    <div className="card-header bg-white py-2">
+                                        <h6 className="mb-0 fw-bold">الإعدادات</h6>
+                                    </div>
+                                    <div className="card-body py-2">
+                                        <div className="d-flex flex-wrap gap-3 mb-3">
+                                            <div className="form-check form-switch">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    id="inStock"
+                                                    checked={inStock}
+                                                    onChange={(e) => setInStock(e.target.checked)}
+                                                />
+                                                <label className="form-check-label small" htmlFor="inStock">متوفر</label>
+                                            </div>
+                                            <div className="form-check form-switch">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    id="featured"
+                                                    checked={featured}
+                                                    onChange={(e) => setFeatured(e.target.checked)}
+                                                />
+                                                <label className="form-check-label small" htmlFor="featured">مميز</label>
+                                            </div>
+                                            <div className="form-check form-switch">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    id="hasDelivery"
+                                                    checked={hasDelivery}
+                                                    onChange={(e) => setHasDelivery(e.target.checked)}
+                                                />
+                                                <label className="form-check-label small" htmlFor="hasDelivery">توصيل</label>
+                                            </div>
+                                            <div className="d-flex align-items-center gap-2">
+                                                <label className="form-label small mb-0">ترتيب:</label>
+                                                <input
+                                                    type="number"
+                                                    className="form-control form-control-sm"
+                                                    style={{ width: '60px' }}
+                                                    value={sortOrder}
+                                                    onChange={(e) => setSortOrder(e.target.value)}
+                                                    min="0"
+                                                />
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="submit"
+                                            className="btn btn-gold w-100"
+                                            disabled={loading}
+                                        >
+                                            {loading ? (
+                                                <span className="spinner-border spinner-border-sm me-2" />
+                                            ) : (
+                                                <MdSave className="me-2" />
+                                            )}
+                                            {isEditing ? 'حفظ التعديلات' : 'إضافة المنتج'}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -330,3 +468,4 @@ const StoreProductForm = () => {
 };
 
 export default StoreProductForm;
+

@@ -14,7 +14,7 @@ const CustomersPage = () => {
     const [address, setAddress] = useState('');
     const [notes, setNotes] = useState('');
 
-    const canManage = userService.canPerformAction(userProfile?.role, 'MANAGE_INVENTORY');
+    const canManage = userService.canPerformAction(userProfile?.roles || [], 'MANAGE_INVENTORY');
 
     useEffect(() => {
         if (status === 'idle') {
@@ -116,7 +116,7 @@ const CustomersPage = () => {
                                 <h3 className="h5 mb-0">قائمة الفروع</h3>
                                 <span className="badge bg-gold text-dark">{customers.length} فرع</span>
                             </div>
-                            
+
                             {status === 'loading' && (
                                 <div className="text-center py-5">
                                     <div className="spinner-border text-gold" role="status">
@@ -124,7 +124,7 @@ const CustomersPage = () => {
                                     </div>
                                 </div>
                             )}
-                            
+
                             {customers.length === 0 && status === 'succeeded' && (
                                 <div className="text-center py-5">
                                     <p className="text-muted mb-0">لا يوجد فروع مسجلة.</p>
@@ -151,8 +151,8 @@ const CustomersPage = () => {
                                                 <td className="small text-muted">{customer.notes || '-'}</td>
                                                 {canManage && (
                                                     <td className="text-center">
-                                                        <button 
-                                                            onClick={() => handleDelete(customer.id)} 
+                                                        <button
+                                                            onClick={() => handleDelete(customer.id)}
                                                             className="btn btn-outline-danger btn-sm border-0"
                                                         >
                                                             <MdDelete className="me-1" /> حذف

@@ -56,7 +56,19 @@ export const updateUserRole = createAsyncThunk(
   'auth/updateUserRole',
   async ({ userId, newRole }, { rejectWithValue }) => {
     try {
+      // Legacy wrapper - converts single role to array
       return await userService.updateUserRole(userId, newRole);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const updateUserRoles = createAsyncThunk(
+  'auth/updateUserRoles',
+  async ({ userId, newRoles }, { rejectWithValue }) => {
+    try {
+      return await userService.updateUserRoles(userId, newRoles);
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -118,10 +130,17 @@ const authSlice = createSlice({
         state.allUsers = action.payload;
       })
       .addCase(updateUserRole.fulfilled, (state, action) => {
-        const { id, role } = action.payload;
+        const { id, roles } = action.payload;
         const user = state.allUsers.find(u => u.id === id);
         if (user) {
-          user.role = role;
+          user.roles = roles;
+        }
+      })
+      .addCase(updateUserRoles.fulfilled, (state, action) => {
+        const { id, roles } = action.payload;
+        const user = state.allUsers.find(u => u.id === id);
+        if (user) {
+          user.roles = roles;
         }
       });
   },

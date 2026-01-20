@@ -26,7 +26,9 @@ const StoreProducts = () => {
 
     const [filter, setFilter] = useState('all'); // all, inStock, outOfStock, featured
 
-    const canManage = userService.canPerformAction(userProfile?.role, 'MANAGE_PUBLIC_PRODUCTS');
+    // Get roles array from profile
+    const roles = userProfile?.roles || [];
+    const canManage = userService.canPerformAction(roles, 'MANAGE_PUBLIC_PRODUCTS');
 
     useEffect(() => {
         dispatch(fetchPublicProducts());

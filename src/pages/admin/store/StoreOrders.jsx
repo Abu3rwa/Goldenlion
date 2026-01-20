@@ -35,7 +35,9 @@ const StoreOrders = () => {
 
     const [filterStatus, setFilterStatus] = useState('all');
 
-    const canManage = userService.canPerformAction(userProfile?.role, 'MANAGE_PUBLIC_ORDERS');
+    // Get roles array from profile
+    const roles = userProfile?.roles || [];
+    const canManage = userService.canPerformAction(roles, 'MANAGE_PUBLIC_ORDERS');
 
     useEffect(() => {
         if (canManage) {

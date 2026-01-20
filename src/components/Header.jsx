@@ -64,12 +64,15 @@ const Header = () => {
     closeMenu();
   };
 
-  const isStaff = userProfile?.role === 'staff';
-  const canManageInventory = userService.canPerformAction(userProfile?.role, 'MANAGE_INVENTORY');
-  const canCreateTransaction = userService.canPerformAction(userProfile?.role, 'CREATE_TRANSACTION');
-  const canViewAllPages = userService.canPerformAction(userProfile?.role, 'VIEW_ALL_PAGES');
-  const canManageUsers = userService.canPerformAction(userProfile?.role, 'MANAGE_USERS');
-  const canViewStore = userService.canPerformAction(userProfile?.role, 'VIEW_STORE_DASHBOARD');
+  // Get roles array from profile
+  const roles = userProfile?.roles || [];
+
+  const isStaffOnly = roles.length === 1 && roles[0] === 'staff';
+  const canManageInventory = userService.canPerformAction(roles, 'MANAGE_INVENTORY');
+  const canCreateTransaction = userService.canPerformAction(roles, 'CREATE_TRANSACTION');
+  const canViewAllPages = userService.canPerformAction(roles, 'VIEW_ALL_PAGES');
+  const canManageUsers = userService.canPerformAction(roles, 'MANAGE_USERS');
+  const canViewStore = userService.canPerformAction(roles, 'VIEW_STORE_DASHBOARD');
 
   const getRoleLabel = (role) => {
     switch (role) {
@@ -79,6 +82,11 @@ const Header = () => {
       case 'sales_manager': return 'مدير المبيعات';
       default: return role;
     }
+  };
+
+  const getRolesDisplay = () => {
+    if (!roles || roles.length === 0) return 'مستخدم';
+    return roles.map(r => getRoleLabel(r)).join(' | ');
   };
 
   // Reusable logo content
@@ -97,8 +105,8 @@ const Header = () => {
     return null;
   }
 
-  // Staff users only see minimal header
-  if (user && isStaff) {
+  // Staff-only users see minimal header
+  if (user && isStaffOnly) {
     return (
       <header className="app-header navbar navbar-expand-lg navbar-dark shadow-sm sticky-top">
         <div className="header-container container-fluid">
@@ -107,9 +115,9 @@ const Header = () => {
           </Link>
           <div className="d-flex align-items-center gap-3">
             <div className="d-none d-sm-block">
-              {userProfile?.role && (
+              {roles.length > 0 && (
                 <span className="badge bg-gold text-dark">
-                  {getRoleLabel(userProfile.role)}
+                  {getRolesDisplay()}
                 </span>
               )}
             </div>
@@ -249,9 +257,9 @@ const Header = () => {
 
           {user && (
             <div className="header-user-area">
-              {userProfile?.role && (
+              {roles.length > 0 && (
                 <span className="user-role-badge">
-                  {getRoleLabel(userProfile.role)}
+                  {getRolesDisplay()}
                 </span>
               )}
               <button onClick={handleLogout} className="logout-btn">
@@ -439,7 +447,7 @@ const Header = () => {
                   <div className="user-info-text">
                     <span className="user-name-text">{user.displayName || 'مستخدم'}</span>
                     <span className="user-role-badge">
-                      {userProfile?.role ? getRoleLabel(userProfile.role) : 'مستخدم'}
+                      {getRolesDisplay()}
                     </span>
                   </div>
                 </div>

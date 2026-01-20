@@ -31,7 +31,7 @@ const TransactionsPage = () => {
     const [commentInputs, setCommentInputs] = useState({});
     const [selectedTxForPrint, setSelectedTxTxForPrint] = useState(null);
 
-    const canComment = userService.canPerformAction(userProfile?.role, 'ADD_COMMENT');
+    const canComment = userService.canPerformAction(userProfile?.roles || [], 'ADD_COMMENT');
 
     useEffect(() => {
         dispatch(fetchTransactions());

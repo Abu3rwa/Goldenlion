@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchAllUsers, updateUserRole } from '../store/authSlice';
+import { fetchAllUsers, updateUserRole, updateUserRoles } from '../store/authSlice';
 import { userService } from '../services/userService';
 import { inviteService } from '../services/inviteService';
 import { USER_ROLES } from '../utils/constants';
@@ -27,7 +27,8 @@ const UsersPage = () => {
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState(null);
 
-    const canManageUsers = userService.canPerformAction(userProfile?.role, 'MANAGE_USERS');
+    const roles = userProfile?.roles || [];
+    const canManageUsers = userService.canPerformAction(roles, 'MANAGE_USERS');
 
     useEffect(() => {
         if (canManageUsers) {
@@ -83,12 +84,14 @@ const UsersPage = () => {
         showToast('success', 'تم نسخ الرمز');
     };
 
-    const handleRoleChange = async (userId, newRole) => {
+    const handleRoleChange = async (userId, newRoles) => {
         try {
-            await dispatch(updateUserRole({ userId, newRole })).unwrap();
-            showToast('success', 'تم تحديث الدور بنجاح');
+            // Ensure it's an array
+            const rolesArray = Array.isArray(newRoles) ? newRoles : [newRoles];
+            await dispatch(updateUserRoles({ userId, newRoles: rolesArray })).unwrap();
+            showToast('success', 'تم تحديث الأدوار بنجاح');
         } catch (error) {
-            showToast('error', error || 'فشل تحديث الدور');
+            showToast('error', error || 'فشل تحديث الأدوار');
         }
     };
 
@@ -100,6 +103,11 @@ const UsersPage = () => {
             case USER_ROLES.SALES_MANAGER: return 'مدير مبيعات';
             default: return role;
         }
+    };
+
+    const getRoleLabels = (roles) => {
+        if (!roles || !Array.isArray(roles)) return getRoleLabel(roles);
+        return roles.map(r => getRoleLabel(r)).join('، ');
     };
 
     const formatDate = (timestamp) => {
@@ -249,58 +257,87 @@ const UsersPage = () => {
             {/* Users Tab */}
             {activeTab === 'users' && (
                 <div className="table-responsive">
-                    <table className="app-table">
+                    <table className="users-table">
                         <thead>
                             <tr>
                                 <th>المستخدم</th>
-                                <th>الدور الحالي</th>
+                                <th>الأدوار</th>
                                 <th>الحالة</th>
                                 <th>آخر دخول</th>
-                                <th>تغيير الدور</th>
+                                <th>تعديل الأدوار</th>
                             </tr>
                         </thead>
                         <tbody>
                             {allUsers.map((u) => {
                                 const isCurrentUser = u.id === user?.uid;
-                                const isOwner = u.role === USER_ROLES.OWNER;
+                                const userRoles = (u.roles && u.roles.length > 0) ? u.roles : (u.role ? [u.role] : []);
+                                const isOwner = userRoles.includes(USER_ROLES.OWNER);
+
+                                const handleToggleRole = (role) => {
+                                    if (isCurrentUser || isOwner) return;
+                                    let newRoles;
+                                    if (userRoles.includes(role)) {
+                                        newRoles = userRoles.filter(r => r !== role);
+                                        if (newRoles.length === 0) newRoles = [USER_ROLES.STAFF];
+                                    } else {
+                                        newRoles = [...userRoles, role];
+                                    }
+                                    handleRoleChange(u.id, newRoles);
+                                };
 
                                 return (
-                                    <tr key={u.id}>
+                                    <tr key={u.id} className={isCurrentUser ? 'current-user-row' : ''}>
                                         <td>
-                                            <strong>{u.email}</strong>
-                                            {isCurrentUser && <span className="text-light"> (أنت)</span>}
-                                            <br />
-                                            <small className="text-light">ID: {u.id.substring(0, 8)}...</small>
+                                            <div className="user-cell">
+                                                <div className="user-avatar-small">
+                                                    {(u.displayName || u.email)?.[0]?.toUpperCase() || 'U'}
+                                                </div>
+                                                <div>
+                                                    <strong>{u.displayName || u.email}</strong>
+                                                    {isCurrentUser && <span className="you-badge">أنت</span>}
+                                                    <br />
+                                                    <small className="text-light">{u.email}</small>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td>
-                                            <span className={`badge ${u.role === 'owner' ? 'gold' : u.role === 'accountant' ? 'success' : u.role === 'sales_manager' ? 'info' : 'pending'}`}>
-                                                {getRoleLabel(u.role)}
-                                            </span>
+                                            <div className="roles-badges">
+                                                {userRoles.map(role => (
+                                                    <span
+                                                        key={role}
+                                                        className={`badge ${role === 'owner' ? 'gold' : role === 'accountant' ? 'success' : role === 'sales_manager' ? 'info' : 'pending'}`}
+                                                    >
+                                                        {getRoleLabel(role)}
+                                                    </span>
+                                                ))}
+                                            </div>
                                         </td>
                                         <td>
-                                            <span className={`badge ${u.isActive !== false ? 'success' : 'pending'}`}>
-                                                <MdCheck />
+                                            <span className={`status-badge ${u.isActive !== false ? 'active' : 'inactive'}`}>
                                                 {u.isActive !== false ? 'نشط' : 'معلق'}
                                             </span>
                                         </td>
-                                        <td className="text-light">
-                                            {formatDate(u.lastLoginAt)}
-                                        </td>
+                                        <td className="text-light">{formatDate(u.lastLoginAt)}</td>
                                         <td>
                                             {isOwner ? (
-                                                <span className="text-light">لا يمكن تغييره</span>
+                                                <span className="text-light">🔒 المالك</span>
+                                            ) : isCurrentUser ? (
+                                                <span className="text-light">-</span>
                                             ) : (
-                                                <select
-                                                    className="role-select"
-                                                    value={u.role}
-                                                    onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                                                    disabled={isCurrentUser}
-                                                >
-                                                    <option value={USER_ROLES.STAFF}>موظف</option>
-                                                    <option value={USER_ROLES.ACCOUNTANT}>محاسب</option>
-                                                    <option value={USER_ROLES.SALES_MANAGER}>مدير مبيعات</option>
-                                                    <option value={USER_ROLES.OWNER}>مالك</option>
-                                                </select>
+                                                <div className="roles-checkboxes-inline">
+                                                    <label className="role-checkbox-inline">
+                                                        <input type="checkbox" checked={userRoles.includes(USER_ROLES.ACCOUNTANT)} onChange={() => handleToggleRole(USER_ROLES.ACCOUNTANT)} />
+                                                        <span>محاسب</span>
+                                                    </label>
+                                                    <label className="role-checkbox-inline">
+                                                        <input type="checkbox" checked={userRoles.includes(USER_ROLES.SALES_MANAGER)} onChange={() => handleToggleRole(USER_ROLES.SALES_MANAGER)} />
+                                                        <span>مبيعات</span>
+                                                    </label>
+                                                    <label className="role-checkbox-inline">
+                                                        <input type="checkbox" checked={userRoles.includes(USER_ROLES.STAFF)} onChange={() => handleToggleRole(USER_ROLES.STAFF)} />
+                                                        <span>موظف</span>
+                                                    </label>
+                                                </div>
                                             )}
                                         </td>
                                     </tr>
@@ -308,7 +345,6 @@ const UsersPage = () => {
                             })}
                         </tbody>
                     </table>
-
                     {allUsers.length === 0 && (
                         <div className="empty-state">
                             <MdPeople />

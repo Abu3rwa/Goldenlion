@@ -5,9 +5,11 @@ import { USER_ROLES } from '../utils/constants';
 
 /**
  * Component that redirects authenticated users to their role-based dashboard
- * - sales_manager → /admin/store
- * - owner, accountant → /dashboard
- * - staff → /transactions
+ * Priority order (if user has multiple roles):
+ * 1. owner → /dashboard (has access to everything)
+ * 2. accountant → /dashboard (inventory management)
+ * 3. sales_manager → /admin/store (store management)
+ * 4. staff → /transactions (basic access)
  */
 const RoleBasedRedirect = () => {
     const { user, userProfile } = useSelector((state) => state.auth);
@@ -17,22 +19,26 @@ const RoleBasedRedirect = () => {
         return null;
     }
 
-    // Redirect based on role
-    const role = userProfile?.role;
+    // Get roles array from profile
+    const roles = userProfile?.roles || [];
 
-    switch (role) {
-        case USER_ROLES.SALES_MANAGER:
-        case USER_ROLES.OWNER:
-            return <Navigate to="/admin/store" replace />;
-        case USER_ROLES.OWNER:
-        case USER_ROLES.ACCOUNTANT:
-            return <Navigate to="/dashboard" replace />;
-        case USER_ROLES.STAFF:
-            return <Navigate to="/transactions" replace />;
-        default:
-            // Default to dashboard for unknown roles
-            return <Navigate to="/" replace />;
+    // Determine redirect based on highest priority role
+    if (roles.includes(USER_ROLES.OWNER)) {
+        return <Navigate to="/dashboard" replace />;
     }
+    if (roles.includes(USER_ROLES.ACCOUNTANT)) {
+        return <Navigate to="/dashboard" replace />;
+    }
+    if (roles.includes(USER_ROLES.SALES_MANAGER)) {
+        return <Navigate to="/admin/store" replace />;
+    }
+    if (roles.includes(USER_ROLES.STAFF)) {
+        return <Navigate to="/transactions" replace />;
+    }
+
+    // Default for unknown roles or empty roles
+    return <Navigate to="/store" replace />;
 };
 
 export default RoleBasedRedirect;
+

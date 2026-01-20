@@ -13,7 +13,7 @@ const ProductList = ({ currency }) => {
   const { suppliers } = useSelector((state) => state.suppliers);
   const { userProfile } = useSelector((state) => state.auth);
 
-  const canManageInventory = userService.canPerformAction(userProfile?.role, 'MANAGE_INVENTORY');
+  const canManageInventory = userService.canPerformAction(userProfile?.roles || [], 'MANAGE_INVENTORY');
 
   useEffect(() => {
     if (status === 'idle') {
@@ -28,9 +28,9 @@ const ProductList = ({ currency }) => {
   };
 
   const handleDelete = (id) => {
-      if(window.confirm('هل أنت متأكد أنك تريد حذف هذا المنتج؟')) {
-          dispatch(removeProduct(id));
-      }
+    if (window.confirm('هل أنت متأكد أنك تريد حذف هذا المنتج؟')) {
+      dispatch(removeProduct(id));
+    }
   }
 
   const getStockStatus = (qty) => {

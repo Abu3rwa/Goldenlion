@@ -4,6 +4,9 @@
    ======================================== */
 
 .landing-page {
+    width: 100svw;
+    padding: 0;
+    margin: 0;
     min-height: 100vh;
     background: linear-gradient(135deg, #1A1A1A 0%, #2D2D2D 50%, #1A1A1A 100%);
     color: white;

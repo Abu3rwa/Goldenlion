@@ -1,38 +1,280 @@
-.store-product-form .image-preview-item {
-    position: relative;
-    aspect-ratio: 1;
-    border-radius: 8px;
-    overflow: hidden;
-    background: #f8f9fa;
+/* ========================================
+   STORE PRODUCT FORM - Compact Two-Column Layout
+   Fits on one screen without scrolling
+   ======================================== */
+
+.store-product-form {
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-.store-product-form .image-preview-item img {
+/* Page Header - Compact */
+.store-product-form .page-header {
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.store-product-form .page-header h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.store-product-form .btn-outline-secondary {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 2px solid #e0e0e0;
+    color: #666;
+    transition: all 0.2s ease;
+}
+
+.store-product-form .btn-outline-secondary:hover {
+    border-color: #D4AF37;
+    color: #D4AF37;
+}
+
+/* Cards - Minimal Padding */
+.store-product-form .card {
+    border-radius: 12px !important;
+}
+
+.store-product-form .card-header {
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.store-product-form .card-header h6 {
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.store-product-form .card-body {
+    padding: 0.75rem 1rem;
+}
+
+/* Form Controls - Smaller */
+.store-product-form .form-label {
+    font-weight: 600;
+    color: #444;
+    font-size: 0.8rem;
+}
+
+.store-product-form .form-control-sm {
+    border-radius: 8px;
+    border: 1.5px solid #e0e0e0;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
+}
+
+.store-product-form .form-control-sm:focus {
+    border-color: #D4AF37;
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.store-product-form textarea.form-control-sm {
+    min-height: 50px;
+}
+
+/* Image Thumbnails - Compact */
+.store-product-form .image-thumb {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.store-product-form .image-thumb img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.store-product-form .image-preview-item .remove-btn {
+.store-product-form .image-thumb .remove-btn {
     position: absolute;
-    top: 4px;
-    left: 4px;
-    padding: 2px 6px;
-    font-size: 0.75rem;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #dc3545;
+    color: white;
+    border: none;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.store-product-form .image-preview-item .main-badge {
+.store-product-form .image-thumb .main-tag {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(212, 175, 55, 0.9);
-    color: white;
-    font-size: 0.7rem;
-    padding: 2px;
+    background: #D4AF37;
+    color: #1A1A1A;
+    font-size: 0.6rem;
     text-align: center;
+    padding: 1px 0;
+    font-weight: 600;
+}
+
+/* Color Variants - Compact List */
+.store-product-form .color-list {
+    max-height: 120px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.store-product-form .color-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.store-product-form .color-item .color-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+}
+
+.store-product-form .color-item .color-name {
+    flex: 1;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.store-product-form .color-item .qty-input {
+    width: 50px;
+    padding: 0.2rem 0.4rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.store-product-form .color-item .delete-btn {
+    background: none;
+    border: none;
+    color: #dc3545;
+    padding: 0.2rem;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.store-product-form .color-item .delete-btn:hover {
+    color: #b02a37;
+}
+
+/* Settings - Inline */
+.store-product-form .form-check {
+    padding-right: 0;
+}
+
+.store-product-form .form-check-input {
+    width: 2.25rem;
+    height: 1.125rem;
+    margin-left: 0.5rem;
+    cursor: pointer;
 }
 
 .store-product-form .form-check-input:checked {
     background-color: #D4AF37;
     border-color: #D4AF37;
+}
+
+.store-product-form .form-check-label {
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+/* Submit Button */
+.store-product-form .btn-gold {
+    padding: 0.6rem 1.5rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #D4AF37 0%, #C5A028 100%);
+    border: none;
+    color: #1A1A1A;
+    transition: all 0.2s ease;
+}
+
+.store-product-form .btn-gold:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.store-product-form .btn-gold:disabled {
+    opacity: 0.7;
+}
+
+.store-product-form .btn-sm.btn-gold {
+    padding: 0.35rem 0.5rem;
+}
+
+/* Outline Gold */
+.store-product-form .btn-outline-gold {
+    border: 1.5px solid #D4AF37;
+    color: #D4AF37;
+    background: transparent;
+    font-weight: 600;
+}
+
+.store-product-form .btn-outline-gold:hover {
+    background: #D4AF37;
+    color: #1A1A1A;
+}
+
+/* Badge */
+.store-product-form .badge.bg-gold {
+    background: linear-gradient(135deg, #D4AF37, #C5A028) !important;
+    font-size: 0.75rem;
+    padding: 0.35rem 0.6rem;
+}
+
+/* Alert */
+.store-product-form .alert-danger {
+    border-radius: 10px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+}
+
+/* Color Picker */
+.store-product-form .form-control-color {
+    padding: 0.2rem;
+    height: 31px;
+}
+
+/* Responsive - Stack on mobile */
+@media (max-width: 991px) {
+    .store-product-form .card-body {
+        padding: 0.75rem;
+    }
+}
+
+@media (max-height: 800px) {
+    .store-product-form .color-list {
+        max-height: 80px;
+    }
 }

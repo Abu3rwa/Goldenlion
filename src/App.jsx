@@ -33,6 +33,7 @@ import StoreProducts from './pages/admin/store/StoreProducts';
 import StoreProductForm from './pages/admin/store/StoreProductForm';
 import StoreCities from './pages/admin/store/StoreCities';
 import StoreOrders from './pages/admin/store/StoreOrders';
+import CheckoutPage from './pages/CheckoutPage';
 import Loading from './components/Loading';
 import './App.css';
 
@@ -81,12 +82,13 @@ function App() {
     <Router>
       <div dir="rtl" className="min-vh-100 bg-light d-flex flex-column">
         <Header />
-        <main className="container-fluid py-4 px-3 px-md-4">
+        <main className="container-fluid py-4 px-3 px-md-4 main-content">
           <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
+            {/* Public Routes - Store is the landing page */}
+            <Route path="/" element={<StorePage />} />
             <Route path="/store" element={<StorePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
 
             {/* Inventory Dashboard - Owner & Accountant only */}
             <Route

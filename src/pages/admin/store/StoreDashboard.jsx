@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { fetchOrderStats } from '../../../store/publicOrdersSlice';
+import { fetchOrderStats, fetchPublicOrders } from '../../../store/publicOrdersSlice';
 import { fetchPublicProducts } from '../../../store/publicProductsSlice';
 import { fetchAllCities } from '../../../store/deliveryCitiesSlice';
 import { formatCurrency } from '../../../utils/currency';
+import { fromCents } from '../../../utils/decimalUtils';
 import { userService } from '../../../services/userService';
 import {
     MdStorefront,
@@ -14,23 +15,27 @@ import {
     MdCheckCircle,
     MdInventory,
     MdLocationCity,
-    MdTrendingUp
+    MdTrendingUp,
+    MdAccessTime
 } from 'react-icons/md';
 import './StoreDashboard.css';
 
 const StoreDashboard = () => {
     const dispatch = useDispatch();
-    const { stats } = useSelector((state) => state.publicOrders);
+    const { stats, orders } = useSelector((state) => state.publicOrders);
     const { products } = useSelector((state) => state.publicProducts);
     const { cities } = useSelector((state) => state.deliveryCities);
     const { currency } = useSelector((state) => state.company);
     const { userProfile } = useSelector((state) => state.auth);
 
-    const canManage = userService.canPerformAction(userProfile?.role, 'VIEW_STORE_DASHBOARD');
+    // Get roles array from profile
+    const roles = userProfile?.roles || [];
+    const canManage = userService.canPerformAction(roles, 'VIEW_STORE_DASHBOARD');
 
     useEffect(() => {
         if (canManage) {
             dispatch(fetchOrderStats());
+            dispatch(fetchPublicOrders());
             dispatch(fetchPublicProducts());
             dispatch(fetchAllCities());
         }
@@ -111,8 +116,57 @@ const StoreDashboard = () => {
                                     <MdTrendingUp />
                                 </div>
                                 <div>
-                                    <div className="stat-value">{formatCurrency(stats?.totalRevenue || 0, currency)}</div>
+                                    <div className="stat-value">{formatCurrency(fromCents(stats?.totalRevenue || 0), currency)}</div>
                                     <div className="stat-label">إجمالي المبيعات</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Profit Stats */}
+            <div className="row g-3 mb-4">
+                <div className="col-md-4">
+                    <div className="card border-0 shadow-sm h-100 stat-card">
+                        <div className="card-body">
+                            <div className="d-flex align-items-center gap-3">
+                                <div className="stat-icon bg-success bg-opacity-10 text-success">
+                                    <MdTrendingUp />
+                                </div>
+                                <div>
+                                    <div className="stat-value text-success">{formatCurrency(fromCents(stats?.totalProfit || 0), currency)}</div>
+                                    <div className="stat-label">صافي الربح</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-md-4">
+                    <div className="card border-0 shadow-sm h-100 stat-card">
+                        <div className="card-body">
+                            <div className="d-flex align-items-center gap-3">
+                                <div className="stat-icon bg-danger bg-opacity-10 text-danger">
+                                    <MdShoppingCart />
+                                </div>
+                                <div>
+                                    <div className="stat-value text-danger">{formatCurrency(fromCents(stats?.totalCost || 0), currency)}</div>
+                                    <div className="stat-label">إجمالي التكاليف</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-md-4">
+                    <div className="card border-0 shadow-sm h-100 stat-card">
+                        <div className="card-body">
+                            <div className="d-flex align-items-center gap-3">
+                                <div className="stat-icon bg-primary bg-opacity-10 text-primary">
+                                    <MdShoppingCart />
+                                </div>
+                                <div>
+                                    <div className="stat-value">{stats?.total || 0}</div>
+                                    <div className="stat-label">إجمالي الطلبات</div>
                                 </div>
                             </div>
                         </div>
@@ -174,14 +228,61 @@ const StoreDashboard = () => {
                     </Link>
                 </div>
                 <div className="card-body p-0">
-                    {!stats?.total ? (
+                    {!orders || orders.length === 0 ? (
                         <div className="text-center py-5 text-muted">
                             <MdShoppingCart className="fs-1 mb-2 opacity-25" />
                             <p>لا توجد طلبات حتى الآن</p>
                         </div>
                     ) : (
-                        <div className="text-center py-4 text-muted">
-                            <p className="mb-0">اضغط على "عرض الكل" لرؤية تفاصيل الطلبات</p>
+                        <div className="table-responsive">
+                            <table className="table table-hover align-middle mb-0">
+                                <thead className="table-light">
+                                    <tr>
+                                        <th>رقم الطلب</th>
+                                        <th>العميل</th>
+                                        <th>المبلغ</th>
+                                        <th>الحالة</th>
+                                        <th>التاريخ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {orders.slice(0, 5).map((order) => {
+                                        const statusColors = {
+                                            pending: 'bg-warning-subtle text-warning',
+                                            processing: 'bg-info-subtle text-info',
+                                            shipped: 'bg-primary-subtle text-primary',
+                                            delivered: 'bg-success-subtle text-success',
+                                            cancelled: 'bg-danger-subtle text-danger'
+                                        };
+                                        const statusLabels = {
+                                            pending: 'قيد الانتظار',
+                                            processing: 'قيد التجهيز',
+                                            shipped: 'تم الشحن',
+                                            delivered: 'تم التوصيل',
+                                            cancelled: 'ملغي'
+                                        };
+                                        const orderDate = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+                                        return (
+                                            <tr key={order.id}>
+                                                <td className="fw-bold">#{order.orderNumber || order.id.slice(0, 6)}</td>
+                                                <td>{order.customerName || order.customer?.name || 'غير محدد'}</td>
+                                                <td className="fw-bold text-success">
+                                                    {formatCurrency(fromCents(order.totalAmountCents || 0), currency)}
+                                                </td>
+                                                <td>
+                                                    <span className={`badge ${statusColors[order.status] || 'bg-secondary'}`}>
+                                                        {statusLabels[order.status] || order.status}
+                                                    </span>
+                                                </td>
+                                                <td className="text-muted small">
+                                                    <MdAccessTime className="me-1" />
+                                                    {orderDate.toLocaleDateString('ar-LY', { month: 'short', day: 'numeric' })}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
                         </div>
                     )}
                 </div>

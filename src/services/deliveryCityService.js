@@ -24,15 +24,15 @@ export const deliveryCityService = {
      */
     getAllCities: async () => {
         const q = query(
-            collection(db, COLLECTIONS.DELIVERY_CITIES),
-            orderBy('sortOrder'),
-            orderBy('name')
+            collection(db, COLLECTIONS.DELIVERY_CITIES)
         );
         const querySnapshot = await getDocs(q);
         const cities = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
+        // Sort in memory
+        cities.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
         return serializeFirestoreData(cities);
     },
 
@@ -41,16 +41,16 @@ export const deliveryCityService = {
      */
     getActiveCities: async () => {
         const q = query(
-            collection(db, COLLECTIONS.DELIVERY_CITIES),
-            where('isActive', '==', true),
-            orderBy('sortOrder'),
-            orderBy('name')
+            collection(db, COLLECTIONS.DELIVERY_CITIES)
         );
         const querySnapshot = await getDocs(q);
-        const cities = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+        const cities = querySnapshot.docs
+            .map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }))
+            .filter(city => city.isActive) // Filter in memory
+            .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)); // Sort in memory
         return serializeFirestoreData(cities);
     },
 

@@ -35,7 +35,7 @@ const StockInPage = () => {
     const [uploadStatus, setUploadStatus] = useState('idle'); // idle, uploading, success, error
     const [receiptUrl, setReceiptUrl] = useState(null);
 
-    const canCreateTransaction = userService.canPerformAction(userProfile?.role, 'CREATE_TRANSACTION');
+    const canCreateTransaction = userService.canPerformAction(userProfile?.roles || [], 'CREATE_TRANSACTION');
 
     useEffect(() => {
         dispatch(fetchProducts());

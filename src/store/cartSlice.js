@@ -37,8 +37,14 @@ const cartSlice = createSlice({
     initialState,
     reducers: {
         addToCart: (state, action) => {
-            const { product, quantity = 1 } = action.payload;
-            const existingIndex = state.items.findIndex(item => item.productId === product.id);
+            const { product, quantity = 1, selectedColor = null } = action.payload;
+
+            // Create unique key: productId + colorName (if color selected)
+            const cartKey = selectedColor
+                ? `${product.id}_${selectedColor.color}`
+                : product.id;
+
+            const existingIndex = state.items.findIndex(item => item.cartKey === cartKey);
 
             if (existingIndex !== -1) {
                 // Update quantity if already in cart
@@ -46,26 +52,33 @@ const cartSlice = createSlice({
             } else {
                 // Add new item
                 state.items.push({
+                    cartKey,
                     productId: product.id,
                     productName: product.name,
                     productNameEn: product.nameEn || '',
                     price: product.price,
+                    costPrice: product.costPrice || 0,
                     image: product.images?.[0] || '',
-                    quantity
+                    quantity,
+                    // Color variant info
+                    selectedColor: selectedColor ? {
+                        color: selectedColor.color,
+                        colorCode: selectedColor.colorCode
+                    } : null
                 });
             }
             saveCartToStorage(state.items);
         },
 
         removeFromCart: (state, action) => {
-            const productId = action.payload;
-            state.items = state.items.filter(item => item.productId !== productId);
+            const cartKey = action.payload;
+            state.items = state.items.filter(item => item.cartKey !== cartKey);
             saveCartToStorage(state.items);
         },
 
         updateQuantity: (state, action) => {
-            const { productId, quantity } = action.payload;
-            const index = state.items.findIndex(item => item.productId === productId);
+            const { cartKey, quantity } = action.payload;
+            const index = state.items.findIndex(item => item.cartKey === cartKey);
 
             if (index !== -1) {
                 if (quantity <= 0) {

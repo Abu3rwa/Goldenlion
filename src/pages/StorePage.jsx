@@ -2,8 +2,11 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchPublicProducts } from '../store/publicProductsSlice';
+import { addToCart, removeFromCart, updateQuantity, toggleCartOpen, selectCartItemCount } from '../store/cartSlice';
 import { formatCurrency } from '../utils/currency';
 import { fromCents } from '../utils/decimalUtils';
+import ProductDetailsModal from '../components/ProductDetailsModal';
+import CartDrawer from '../components/CartDrawer';
 import { GiLion } from 'react-icons/gi';
 import {
     MdSearch,
@@ -11,23 +14,29 @@ import {
     MdShoppingCart,
     MdImage,
     MdLocalMall,
-    MdFilterList,
-    MdWhatsapp
+    MdAdd,
+    MdRemove,
+    MdDelete,
+    MdCheck,
+    MdLogin
 } from 'react-icons/md';
 import { FaWhatsapp } from 'react-icons/fa';
 import './StorePage.css';
 
 /**
  * Public Store Page - Displays all available products for visitors
- * Features: Search, Filter by featured, Responsive grid, WhatsApp contact
+ * Features: Search, Filter, Product Details Modal, Cart, WhatsApp contact
  */
 const StorePage = () => {
     const dispatch = useDispatch();
     const { products, status } = useSelector((state) => state.publicProducts);
     const { currency, phone } = useSelector((state) => state.company);
+    const cartItemCount = useSelector(selectCartItemCount);
 
     const [searchQuery, setSearchQuery] = useState('');
     const [filter, setFilter] = useState('all'); // 'all', 'featured'
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         dispatch(fetchPublicProducts());
@@ -54,26 +63,36 @@ const StorePage = () => {
         return result;
     }, [products, filter, searchQuery]);
 
-    // Featured products for hero section
-    const featuredProducts = useMemo(() => {
-        return products.filter(p => p.inStock && p.featured).slice(0, 4);
-    }, [products]);
-
     const handleWhatsAppClick = () => {
-        const phoneNumber = phone || '218910000000'; // Default phone
+        const phoneNumber = phone || '218910000000';
         const message = encodeURIComponent('مرحباً، أرغب بالاستفسار عن المنتجات');
         window.open(`https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${message}`, '_blank');
+    };
+
+    const handleProductClick = (product) => {
+        setSelectedProduct(product);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedProduct(null);
+    };
+
+    const handleOpenCart = () => {
+        dispatch(toggleCartOpen());
     };
 
     // Loading state
     if (status === 'loading') {
         return (
             <div className="store-page">
-                <StoreHeader />
+                <StoreHeader cartItemCount={cartItemCount} onCartClick={handleOpenCart} />
                 <div className="store-loading">
                     <div className="store-spinner"></div>
                     <p className="store-loading-text">جاري تحميل المنتجات...</p>
                 </div>
+                <CartDrawer />
             </div>
         );
     }
@@ -81,7 +100,7 @@ const StorePage = () => {
     return (
         <div className="store-page">
             {/* Header */}
-            <StoreHeader />
+            <StoreHeader cartItemCount={cartItemCount} onCartClick={handleOpenCart} />
 
             {/* Search & Filter Section */}
             <section className="search-section">
@@ -139,7 +158,7 @@ const StorePage = () => {
                                 key={product.id}
                                 product={product}
                                 currency={currency}
-                                onWhatsAppClick={handleWhatsAppClick}
+                                onClick={() => handleProductClick(product)}
                             />
                         ))}
                     </div>
@@ -156,37 +175,84 @@ const StorePage = () => {
                     <FaWhatsapp />
                 </button>
             </div>
+
+            {/* Product Details Modal */}
+            <ProductDetailsModal
+                product={selectedProduct}
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+            />
+
+            {/* Cart Drawer */}
+            <CartDrawer />
         </div>
     );
 };
 
 /**
- * Store Header Component
+ * Store Header Component with Cart Button
  */
-const StoreHeader = () => (
+const StoreHeader = ({ cartItemCount, onCartClick }) => (
     <header className="store-header">
-        <div className="store-header-content">
-            <Link to="/" style={{ textDecoration: 'none' }}>
-                <GiLion style={{ fontSize: '3rem', color: '#D4AF37', marginBottom: '0.5rem' }} />
+        {/* Top Nav Buttons */}
+        <div className="store-header-nav">
+            <Link to="/login" className="store-login-btn">
+                <MdLogin /> تسجيل الدخول
             </Link>
-            <h1 className="store-title">متجر الأسد الذهبي</h1>
+            <button className="store-cart-btn" onClick={onCartClick}>
+                <MdShoppingCart />
+                {cartItemCount > 0 && (
+                    <span className="store-cart-count">{cartItemCount}</span>
+                )}
+            </button>
+        </div>
+
+        {/* Brand Content */}
+        <div className="store-header-content">
+            <GiLion style={{ fontSize: '4rem', color: '#D4AF37', marginBottom: '0.5rem' }} />
+            <h1 className="store-title">متجر  مجموعةالأسد الذهبي</h1>
             <p className="store-subtitle">أفخم الشنط والمحافظ بأسعار منافسة</p>
         </div>
     </header>
 );
 
 /**
- * Product Card Component
+ * Product Card Component - Click to open details
  */
-const ProductCard = ({ product, currency, onWhatsAppClick }) => {
-    const handleOrderClick = () => {
-        const phone = '218910000000'; // You can make this dynamic
-        const message = encodeURIComponent(`مرحباً، أرغب بطلب المنتج: ${product.name}`);
-        window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+const ProductCard = ({ product, currency, onClick }) => {
+    const dispatch = useDispatch();
+    const cartItems = useSelector((state) => state.cart.items);
+    const [justAdded, setJustAdded] = useState(false);
+
+    const cartItem = cartItems.find(item => item.productId === product.id);
+    const quantity = cartItem ? cartItem.quantity : 0;
+
+    const handleQuickAdd = (e) => {
+        e.stopPropagation();
+        dispatch(addToCart({ product, quantity: 1 }));
+        setJustAdded(true);
+        setTimeout(() => setJustAdded(false), 1500);
+    };
+
+    const handleIncrease = (e) => {
+        e.stopPropagation();
+        dispatch(updateQuantity({ productId: product.id, quantity: quantity + 1 }));
+    };
+
+    const handleDecrease = (e) => {
+        e.stopPropagation();
+        if (quantity > 1) {
+            dispatch(updateQuantity({ productId: product.id, quantity: quantity - 1 }));
+        } else {
+            dispatch(removeFromCart(product.id));
+        }
     };
 
     return (
-        <article className={`product-card ${!product.inStock ? 'out-of-stock' : ''}`}>
+        <article
+            className={`product-card ${!product.inStock ? 'out-of-stock' : ''}`}
+            onClick={onClick}
+        >
             {/* Product Image */}
             <div className="product-card-image-wrapper">
                 {product.images?.[0] ? (
@@ -215,6 +281,17 @@ const ProductCard = ({ product, currency, onWhatsAppClick }) => {
                         </span>
                     )}
                 </div>
+
+                {/* Quick Add Button (on hover) - Only show if not in cart yet to avoid confusion */}
+                {product.inStock && quantity === 0 && (
+                    <button
+                        className={`quick-add-btn ${justAdded ? 'added' : ''}`}
+                        onClick={handleQuickAdd}
+                        title="أضف للسلة"
+                    >
+                        {justAdded ? <MdCheck /> : <MdAdd />}
+                    </button>
+                )}
             </div>
 
             {/* Product Content */}
@@ -228,13 +305,27 @@ const ProductCard = ({ product, currency, onWhatsAppClick }) => {
                     <span className="product-card-price">
                         {formatCurrency(fromCents(product.price), currency)}
                     </span>
+
                     {product.inStock ? (
-                        <button
-                            className="product-card-action add-to-cart"
-                            onClick={handleOrderClick}
-                        >
-                            <FaWhatsapp /> أطلب الآن
-                        </button>
+                        quantity > 0 ? (
+                            <div className="product-card-qty-control" onClick={(e) => e.stopPropagation()}>
+                                <button className="qty-control-btn minus" onClick={handleDecrease}>
+                                    {quantity === 1 ? <MdDelete /> : <MdRemove />}
+                                </button>
+                                <span className="qty-control-value">{quantity}</span>
+                                <button className="qty-control-btn plus" onClick={handleIncrease}>
+                                    <MdAdd />
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                className="product-card-action add-to-cart"
+                                onClick={handleQuickAdd}
+                            >
+                                <MdShoppingCart />
+                                أضف للسلة
+                            </button>
+                        )
                     ) : (
                         <span className="product-card-action out-of-stock">
                             غير متوفر
