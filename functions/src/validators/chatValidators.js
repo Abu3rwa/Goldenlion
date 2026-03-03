@@ -23,8 +23,8 @@ function validateStartVerification(payload = {}) {
   assertSessionId(payload.sessionId);
   assertTextLength(payload.orderNumber, 3, 64, "orderNumber");
   const method = payload.method;
-  if (method !== "email" && method !== "phone") {
-    throw new AppError("validation/invalid-method", "method must be email or phone");
+  if (method !== "email") {
+    throw new AppError("validation/invalid-method", "method must be email");
   }
   assertTextLength(payload.destination, 4, 120, "destination");
 }

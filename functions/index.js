@@ -5,15 +5,20 @@ const { confirmOrderVerificationApi } = require("./src/api/confirmOrderVerificat
 const { createSupportTicketApi } = require("./src/api/createSupportTicket");
 const { deleteSessionTranscriptApi } = require("./src/api/deleteSessionTranscript");
 
-const secureCallableOptions = {
+const baseCallableOptions = {
   region: "us-central1",
   timeoutSeconds: 30,
   memory: "512MiB",
-  secrets: ["GEMINI_API_KEY", "CHAT_JWT_SECRET"],
 };
 
-exports.chatSendMessage = onCall(secureCallableOptions, chatSendMessage);
-exports.startOrderVerification = onCall(secureCallableOptions, startOrderVerificationApi);
-exports.confirmOrderVerification = onCall(secureCallableOptions, confirmOrderVerificationApi);
-exports.createSupportTicket = onCall(secureCallableOptions, createSupportTicketApi);
-exports.deleteSessionTranscript = onCall(secureCallableOptions, deleteSessionTranscriptApi);
+exports.chatSendMessage = onCall(
+  { ...baseCallableOptions, secrets: ["GEMINI_API_KEY", "CHAT_JWT_SECRET"] },
+  chatSendMessage
+);
+exports.startOrderVerification = onCall(baseCallableOptions, startOrderVerificationApi);
+exports.confirmOrderVerification = onCall(
+  { ...baseCallableOptions, secrets: ["CHAT_JWT_SECRET"] },
+  confirmOrderVerificationApi
+);
+exports.createSupportTicket = onCall(baseCallableOptions, createSupportTicketApi);
+exports.deleteSessionTranscript = onCall(baseCallableOptions, deleteSessionTranscriptApi);

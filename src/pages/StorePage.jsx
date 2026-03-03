@@ -42,6 +42,28 @@ const StorePage = () => {
         dispatch(fetchPublicProducts());
     }, [dispatch]);
 
+    useEffect(() => {
+        const openFromHash = () => {
+            const hash = `${window.location.hash || ''}`;
+            if (!hash.startsWith('#product-')) {
+                return;
+            }
+            const productId = hash.replace('#product-', '').trim();
+            if (!productId || !products?.length) {
+                return;
+            }
+            const match = products.find((p) => `${p.id}` === productId);
+            if (match) {
+                setSelectedProduct(match);
+                setIsModalOpen(true);
+            }
+        };
+
+        openFromHash();
+        window.addEventListener('hashchange', openFromHash);
+        return () => window.removeEventListener('hashchange', openFromHash);
+    }, [products]);
+
     // Filter and search products
     const filteredProducts = useMemo(() => {
         let result = products.filter(p => p.inStock); // Only show in-stock products
@@ -77,6 +99,9 @@ const StorePage = () => {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setSelectedProduct(null);
+        if (`${window.location.hash || ''}`.startsWith('#product-')) {
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
     };
 
     const handleOpenCart = () => {

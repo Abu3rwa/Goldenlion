@@ -50,7 +50,6 @@ function validateToolArgs(toolName, args = {}) {
       }
       return {
         orderNumber: args.orderNumber.trim(),
-        verificationToken: `${args.verificationToken || ""}`.trim(),
       };
 
     case "create_ticket":

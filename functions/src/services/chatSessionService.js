@@ -1,6 +1,24 @@
 const { db, admin } = require("../utils/firestore");
 const { CHAT_LIMITS } = require("../utils/constants");
 
+function stripUndefinedDeep(value) {
+  if (Array.isArray(value)) {
+    return value.map(stripUndefinedDeep).filter((item) => item !== undefined);
+  }
+  if (!value || typeof value !== "object") {
+    return value;
+  }
+
+  const cleaned = {};
+  Object.entries(value).forEach(([key, val]) => {
+    const normalized = stripUndefinedDeep(val);
+    if (normalized !== undefined) {
+      cleaned[key] = normalized;
+    }
+  });
+  return cleaned;
+}
+
 /**
  * @param {string} sessionId
  * @param {Record<string, any>} payload
@@ -44,11 +62,12 @@ async function loadRecentMessages(sessionId) {
  * @param {Record<string, any>} metadata
  */
 async function saveMessage(sessionId, role, text, metadata = {}) {
+  const cleanedMetadata = stripUndefinedDeep(metadata);
   await db.collection("chatSessions").doc(sessionId).collection("messages").add({
     role,
     text,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    metadata,
+    metadata: cleanedMetadata,
   });
 }
 

@@ -35,6 +35,7 @@ import StoreCities from './pages/admin/store/StoreCities';
 import StoreOrders from './pages/admin/store/StoreOrders';
 import CheckoutPage from './pages/CheckoutPage';
 import Loading from './components/Loading';
+import ChatWidget from './components/chat/ChatWidget';
 import './App.css';
 
 function App() {
@@ -82,7 +83,7 @@ function App() {
     <Router>
       <div dir="rtl" className="min-vh-100 bg-light d-flex flex-column">
         <Header />
-        <main className="container-fluid py-4 px-3 px-md-4 main-content">
+        <main className="main-content">
           <Routes>
             {/* Public Routes - Store is the landing page */}
             <Route path="/" element={<StorePage />} />
@@ -239,6 +240,7 @@ function App() {
             />
           </Routes>
         </main>
+        <ChatWidget />
       </div>
     </Router>
   );
