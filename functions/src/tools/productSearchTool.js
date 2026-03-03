@@ -37,14 +37,46 @@ async function productSearchTool(args) {
   const query = (args.query || "").toLowerCase();
   const category = (args.category || "").toLowerCase();
   const tags = (args.tags || []).map((t) => `${t}`.toLowerCase());
-  const minPrice = Number.isFinite(args.minPrice) ? args.minPrice : 0;
-  const maxPrice = Number.isFinite(args.maxPrice) ? args.maxPrice : Number.MAX_SAFE_INTEGER;
+  let minPrice = Number.isFinite(args.minPrice) ? args.minPrice : 0;
+  let maxPrice = Number.isFinite(args.maxPrice) ? args.maxPrice : Number.MAX_SAFE_INTEGER;
   const limit = args.limit || 4;
+  const isBagCategory = ["حقائب", "حقيبة", "شنط", "شنطة", "bags", "bag"].some((k) =>
+    category.includes(k)
+  );
+
+  // Auto-adjust budget filters when data is stored in cents but user budget is in main currency units.
+  const priced = products.map((p) => Number(p.price || 0)).filter((p) => Number.isFinite(p) && p > 0);
+  const likelyCents = priced.length > 0 && priced.some((p) => p >= 1000);
+  const budgetsLookMajorUnits =
+    (Number.isFinite(args.minPrice) && args.minPrice > 0 && args.minPrice < 10000) ||
+    (Number.isFinite(args.maxPrice) && args.maxPrice > 0 && args.maxPrice < 10000);
+  if (likelyCents && budgetsLookMajorUnits) {
+    if (Number.isFinite(args.minPrice)) {
+      minPrice = args.minPrice * 100;
+    }
+    if (Number.isFinite(args.maxPrice)) {
+      maxPrice = args.maxPrice * 100;
+    }
+  }
 
   const filtered = products
     .filter((p) => p.inStock)
     .filter((p) => p.price >= minPrice && p.price <= maxPrice)
-    .filter((p) => (!category ? true : `${p.category}`.toLowerCase().includes(category)))
+    .filter((p) => {
+      if (!category) {
+        return true;
+      }
+      const productCategory = `${p.category || ""}`.toLowerCase();
+      if (productCategory.includes(category)) {
+        return true;
+      }
+      if (isBagCategory) {
+        return ["حقائب", "حقيبة", "شنط", "شنطة", "bags", "bag"].some((k) =>
+          productCategory.includes(k)
+        );
+      }
+      return false;
+    })
     .filter((p) => {
       if (!tags.length) {
         return true;
