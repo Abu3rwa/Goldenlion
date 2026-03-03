@@ -1,5 +1,22 @@
 const { db } = require("../utils/firestore");
 
+function normalizeImageUrl(value) {
+  const raw = `${value || ""}`.trim();
+  if (!raw) {
+    return "";
+  }
+  if (raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("data:")) {
+    return raw;
+  }
+  if (raw.startsWith("//")) {
+    return `https:${raw}`;
+  }
+  if (/^[a-z0-9.-]+\.[a-z]{2,}(\/.*)?$/i.test(raw)) {
+    return `https://${raw}`;
+  }
+  return raw;
+}
+
 function mapProduct(doc) {
   const data = doc.data();
   const hasInStockFlag = typeof data.inStock === "boolean";
@@ -21,7 +38,7 @@ function mapProduct(doc) {
     currency: data.currency || "LYD",
     inStock: inferredInStock,
     tags: Array.isArray(data.tags) ? data.tags : [],
-    imageUrl: data.imageUrl || data.images?.[0] || "",
+    imageUrl: normalizeImageUrl(data.imageUrl || data.images?.[0] || ""),
   };
 }
 
@@ -29,11 +46,11 @@ function mapProduct(doc) {
  * @param {import("../utils/firestore").db.Firestore} dbRef
  */
 async function readProductsCollection(dbRef) {
-  const primary = await dbRef.collection("products").limit(80).get();
+  const primary = await dbRef.collection("publicProducts").limit(80).get();
   if (!primary.empty) {
     return primary.docs.map(mapProduct);
   }
-  const fallback = await dbRef.collection("publicProducts").limit(80).get();
+  const fallback = await dbRef.collection("products").limit(80).get();
   return fallback.docs.map(mapProduct);
 }
 
