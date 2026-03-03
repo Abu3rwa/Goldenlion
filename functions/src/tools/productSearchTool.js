@@ -2,6 +2,14 @@ const { db } = require("../utils/firestore");
 
 function mapProduct(doc) {
   const data = doc.data();
+  const hasInStockFlag = typeof data.inStock === "boolean";
+  const hasColorVariants = Array.isArray(data.colorVariants) && data.colorVariants.length > 0;
+  const colorStock = hasColorVariants
+    ? data.colorVariants.reduce((sum, variant) => sum + Number(variant?.quantity || 0), 0)
+    : 0;
+  const inferredInStock = hasInStockFlag
+    ? data.inStock
+    : (hasColorVariants ? colorStock > 0 : true);
   return {
     id: doc.id,
     nameAr: data.nameAr || data.name || "",
@@ -11,7 +19,7 @@ function mapProduct(doc) {
     category: data.category || "",
     price: Number(data.price || 0),
     currency: data.currency || "LYD",
-    inStock: Boolean(data.inStock),
+    inStock: inferredInStock,
     tags: Array.isArray(data.tags) ? data.tags : [],
     imageUrl: data.imageUrl || data.images?.[0] || "",
   };

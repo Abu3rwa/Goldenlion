@@ -7,4 +7,4 @@ const result = await ai.models.generateContent({
     contents: "Hello, how are you?",
 });
 
-console.log(result.text); 
+console.log(result.text);  

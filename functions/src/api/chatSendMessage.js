@@ -183,7 +183,7 @@ function parseProductSearchArgs(text = "", locale = "ar") {
 
   if (lower.includes("حقيبة") || lower.includes("حقائب") || lower.includes("شنطة") || lower.includes("شنط") || lower.includes("bag")) {
     args.category = locale === "en" ? "bags" : "حقائب";
-    args.query = "حقيبة";
+    args.query = "";
   }
 
   // Generic recommendation requests should not over-constrain search by full sentence text.

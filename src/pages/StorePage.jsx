@@ -12,6 +12,7 @@ import {
     MdSearch,
     MdStar,
     MdShoppingCart,
+    MdDashboard,
     MdImage,
     MdLocalMall,
     MdAdd,
@@ -21,6 +22,7 @@ import {
     MdLogin
 } from 'react-icons/md';
 import { FaWhatsapp } from 'react-icons/fa';
+import { userService } from '../services/userService';
 import './StorePage.css';
 
 /**
@@ -217,29 +219,73 @@ const StorePage = () => {
 /**
  * Store Header Component with Cart Button
  */
-const StoreHeader = ({ cartItemCount, onCartClick }) => (
-    <header className="store-header">
-        {/* Top Nav Buttons */}
-        <div className="store-header-nav">
-            <Link to="/login" className="store-login-btn">
-                <MdLogin /> تسجيل الدخول
-            </Link>
-            <button className="store-cart-btn" onClick={onCartClick}>
-                <MdShoppingCart />
-                {cartItemCount > 0 && (
-                    <span className="store-cart-count">{cartItemCount}</span>
-                )}
-            </button>
-        </div>
+const StoreHeader = ({ cartItemCount, onCartClick }) => {
+    const { user, userProfile } = useSelector((state) => state.auth);
+    const roles = userProfile?.roles || [];
+    const canViewAllPages = userService.canPerformAction(roles, 'VIEW_ALL_PAGES');
+    const canViewStore = userService.canPerformAction(roles, 'VIEW_STORE_DASHBOARD');
 
-        {/* Brand Content */}
-        <div className="store-header-content">
-            <GiLion style={{ fontSize: '4rem', color: '#D4AF37', marginBottom: '0.5rem' }} />
-            <h1 className="store-title">متجر  مجموعةالأسد الذهبي</h1>
-            <p className="store-subtitle">أفخم الشنط والمحافظ بأسعار منافسة</p>
-        </div>
-    </header>
-);
+    const getRoleLabel = (role) => {
+        switch (role) {
+            case 'owner': return 'المالك';
+            case 'accountant': return 'المحاسب';
+            case 'staff': return 'موظف';
+            case 'sales_manager': return 'مدير المبيعات';
+            default: return role;
+        }
+    };
+
+    const rolesDisplay = roles.length ? roles.map((r) => getRoleLabel(r)).join(' | ') : 'مستخدم';
+    const managementPath = canViewAllPages ? '/dashboard' : (canViewStore ? '/admin/store' : null);
+    const managementLabel = canViewAllPages ? 'لوحة التحكم' : 'لوحة المبيعات';
+
+    return (
+        <header className="store-header">
+            {/* Top Nav Buttons */}
+            <div className="store-header-nav">
+                {user ? (
+                    <>
+                        {managementPath ? (
+                            <Link to={managementPath} className="store-login-btn">
+                                <MdDashboard /> {managementLabel}
+                            </Link>
+                        ) : null}
+                        <span
+                            style={{
+                                background: 'rgba(212, 175, 55, 0.15)',
+                                border: '1px solid rgba(212, 175, 55, 0.4)',
+                                color: '#fff',
+                                borderRadius: '999px',
+                                padding: '0.35rem 0.75rem',
+                                fontSize: '0.85rem',
+                                fontWeight: 600,
+                            }}
+                        >
+                            {rolesDisplay}
+                        </span>
+                    </>
+                ) : (
+                    <Link to="/login" className="store-login-btn">
+                        <MdLogin /> تسجيل الدخول
+                    </Link>
+                )}
+                <button className="store-cart-btn" onClick={onCartClick}>
+                    <MdShoppingCart />
+                    {cartItemCount > 0 && (
+                        <span className="store-cart-count">{cartItemCount}</span>
+                    )}
+                </button>
+            </div>
+
+            {/* Brand Content */}
+            <div className="store-header-content">
+                <GiLion style={{ fontSize: '4rem', color: '#D4AF37', marginBottom: '0.5rem' }} />
+                <h1 className="store-title">متجر  مجموعةالأسد الذهبي</h1>
+                <p className="store-subtitle">أفخم الشنط والمحافظ بأسعار منافسة</p>
+            </div>
+        </header>
+    );
+};
 
 /**
  * Product Card Component - Click to open details
