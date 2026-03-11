@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import RoleBasedRedirect from '../components/RoleBasedRedirect';
@@ -15,6 +15,8 @@ import {
     MdArrowBack,
     MdVerified,
     MdPayment
+    , MdChevronLeft
+    , MdChevronRight
 } from 'react-icons/md';
 import { FaWhatsapp } from 'react-icons/fa';
 import './LandingPage.css';
@@ -27,7 +29,7 @@ import './LandingPage.css';
 const LandingPage = () => {
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.auth);
-    const { products, status } = useSelector((state) => state.publicProducts);
+    const { products, status, error } = useSelector((state) => state.publicProducts);
     const { currency, phone } = useSelector((state) => state.company);
 
     // Fetch products on mount
@@ -35,12 +37,77 @@ const LandingPage = () => {
         dispatch(fetchPublicProducts());
     }, [dispatch]);
 
-    // Get featured products (max 6)
-    const featuredProducts = useMemo(() => {
-        return products
-            .filter(p => p.inStock && p.featured)
-            .slice(0, 6);
+    const inStockProducts = useMemo(() => {
+        return products.filter((product) => product?.inStock !== false);
     }, [products]);
+
+    const featuredInStockProducts = useMemo(() => {
+        return inStockProducts.filter((product) => Boolean(product?.featured));
+    }, [inStockProducts]);
+
+    const featuredProducts = useMemo(() => {
+        return products.filter((product) => Boolean(product?.featured));
+    }, [products]);
+
+    const showcaseMeta = useMemo(() => {
+        if (featuredInStockProducts.length > 0) {
+            return {
+                title: 'منتجات مميزة',
+                subtitle: 'اكتشف أحدث المنتجات المميزة لدينا',
+                items: featuredInStockProducts.slice(0, 6),
+            };
+        }
+
+        if (featuredProducts.length > 0) {
+            return {
+                title: 'منتجات مميزة',
+                subtitle: 'تصفح المنتجات المميزة لدينا',
+                items: featuredProducts.slice(0, 6),
+            };
+        }
+
+        if (inStockProducts.length > 0) {
+            return {
+                title: 'منتجاتنا',
+                subtitle: 'تصفح أحدث المنتجات المتوفرة لدينا',
+                items: inStockProducts.slice(0, 6),
+            };
+        }
+
+        return {
+            title: 'منتجاتنا',
+            subtitle: 'تصفح أحدث منتجاتنا',
+            items: products.slice(0, 6),
+        };
+    }, [featuredInStockProducts, featuredProducts, inStockProducts, products]);
+
+    const [heroSlideIndex, setHeroSlideIndex] = useState(0);
+
+    useEffect(() => {
+        setHeroSlideIndex(0);
+    }, [showcaseMeta.items.length]);
+
+    useEffect(() => {
+        if (showcaseMeta.items.length <= 1) return undefined;
+
+        const timerId = window.setInterval(() => {
+            setHeroSlideIndex((prev) => (prev + 1) % showcaseMeta.items.length);
+        }, 4500);
+
+        return () => window.clearInterval(timerId);
+    }, [showcaseMeta.items.length]);
+
+    const activeHeroProduct = showcaseMeta.items[heroSlideIndex] || null;
+
+    const handleHeroSlideNext = () => {
+        if (showcaseMeta.items.length <= 1) return;
+        setHeroSlideIndex((prev) => (prev + 1) % showcaseMeta.items.length);
+    };
+
+    const handleHeroSlidePrev = () => {
+        if (showcaseMeta.items.length <= 1) return;
+        setHeroSlideIndex((prev) => (prev - 1 + showcaseMeta.items.length) % showcaseMeta.items.length);
+    };
 
     // If logged in, redirect to appropriate dashboard
     if (user) {
@@ -48,56 +115,160 @@ const LandingPage = () => {
     }
 
     const handleWhatsAppClick = () => {
-        const phoneNumber = phone || '218910000000';
+        const phoneNumber = phone || '218931169753';
         const message = encodeURIComponent('مرحباً، أرغب بالاستفسار عن المنتجات');
         window.open(`https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${message}`, '_blank');
+    };
+
+    const buildProductStoreLink = (productId) => {
+        if (!productId) return '/store';
+        return `/store#product-${encodeURIComponent(`${productId}`)}`;
     };
 
     return (
         <div className="landing-page">
             {/* Hero Section */}
             <section className="hero-section">
-                <div className="hero-content">
-                    <div className="hero-logo">
-                        <GiLion className="lion-icon" />
+                <div className="hero-layout">
+                    <div className="hero-slider-panel">
+                        
+
+                        {(status === 'idle' || status === 'loading') && (
+                            <p className="hero-slider-state">جاري تحميل المنتجات...</p>
+                        )}
+
+                        {status === 'failed' && (
+                            <p className="hero-slider-state hero-slider-state-error">
+                                تعذر تحميل المنتجات. {error ? `(${error})` : ''}
+                            </p>
+                        )}
+
+                        {status === 'succeeded' && !activeHeroProduct && (
+                            <p className="hero-slider-state">لا توجد منتجات متاحة حالياً.</p>
+                        )}
+
+                        {activeHeroProduct && (
+                            <div className="hero-slider-card-wrap">
+                                <button
+                                    className="hero-slider-nav prev"
+                                    type="button"
+                                    onClick={handleHeroSlidePrev}
+                                    aria-label="السابق"
+                                >
+                                    <MdChevronRight />
+                                </button>
+
+                                <Link to={buildProductStoreLink(activeHeroProduct.id)} className="hero-slider-card">
+                                    <div className="hero-slider-image-wrap">
+                                        {activeHeroProduct.images?.[0] ? (
+                                            <img
+                                                src={activeHeroProduct.images[0]}
+                                                alt={activeHeroProduct.name}
+                                                className="hero-slider-image"
+                                                loading="lazy"
+                                            />
+                                        ) : (
+                                            <div className="hero-slider-image-placeholder">
+                                                <MdImage />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="hero-slider-info">
+                                        <h3>{activeHeroProduct.name}</h3>
+                                        <p>{formatCurrency(fromCents(activeHeroProduct.price), currency)}</p>
+                                    </div>
+                                </Link>
+
+                                <button
+                                    className="hero-slider-nav next"
+                                    type="button"
+                                    onClick={handleHeroSlideNext}
+                                    aria-label="التالي"
+                                >
+                                    <MdChevronLeft />
+                                </button>
+                            </div>
+                        )}
+
+                        {showcaseMeta.items.length > 1 && (
+                            <div className="hero-slider-dots">
+                                {showcaseMeta.items.map((item, index) => (
+                                    <button
+                                        key={item.id}
+                                        type="button"
+                                        className={`hero-slider-dot ${index === heroSlideIndex ? 'active' : ''}`}
+                                        onClick={() => setHeroSlideIndex(index)}
+                                        aria-label={`عرض المنتج ${index + 1}`}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
-                    <h1 className="hero-title">الأسد الذهبي</h1>
-                    <p className="hero-subtitle">أفضل الشنط والمحافظ بأسعار منافسة</p>
-                    <div className="hero-actions">
-                        <Link to="/store" className="btn-primary-gold">
-                            <MdShoppingCart /> تسوق الآن
-                        </Link>
-                        <Link to="/login" className="btn-outline-gold">
-                            <MdLogin /> تسجيل الدخول
-                        </Link>
+
+                    <div className="hero-content">
+                        <div className="hero-logo">
+                            <GiLion className="lion-icon" />
+                        </div>
+                        <h1 className="hero-title">مجمـوعة الأسـد</h1>
+                        <p className="hero-subtitle">أفضل الشنط والمحافظ بأسعار منافسة</p>
+                        <div className="hero-actions">
+                            <Link to="/store" className="btn-primary-gold">
+                                <MdShoppingCart /> تسوق الآن
+                            </Link>
+                            <Link to="/checkout" className="btn-outline-gold">
+                                <MdPayment /> إتمام الطلب
+                            </Link>
+                            <Link to="/login" className="btn-outline-gold">
+                                <MdLogin /> تسجيل الدخول
+                            </Link>
+                        </div>
                     </div>
                 </div>
                 <div className="hero-decoration"></div>
             </section>
 
-            {/* Featured Products Section */}
-            {featuredProducts.length > 0 && (
-                <section className="featured-products-section">
-                    <div className="featured-products-header">
-                        <h2><MdStar className="text-gold" /> منتجات مميزة</h2>
-                        <p>اكتشف أحدث المنتجات المميزة لدينا</p>
-                    </div>
+            {/* Products Showcase Section */}
+            <section className="featured-products-section">
+                <div className="featured-products-header">
+                    <h2><MdStar className="text-gold" /> {showcaseMeta.title}</h2>
+                    <p>{showcaseMeta.subtitle}</p>
+                </div>
+
+                {(status === 'idle' || status === 'loading') && (
+                    <p className="featured-products-state">جاري تحميل المنتجات...</p>
+                )}
+
+                {status === 'failed' && (
+                    <p className="featured-products-state featured-products-state-error">
+                        تعذر تحميل المنتجات حالياً. {error ? `(${error})` : 'يرجى المحاولة لاحقاً.'}
+                    </p>
+                )}
+
+                {status === 'succeeded' && showcaseMeta.items.length === 0 && (
+                    <p className="featured-products-state">
+                        لا توجد منتجات متاحة حالياً.
+                    </p>
+                )}
+
+                {status === 'succeeded' && showcaseMeta.items.length > 0 && (
                     <div className="featured-products-grid">
-                        {featuredProducts.map((product) => (
+                        {showcaseMeta.items.map((product) => (
                             <FeaturedProductCard
                                 key={product.id}
                                 product={product}
                                 currency={currency}
+                                productLink={buildProductStoreLink(product.id)}
                             />
                         ))}
                     </div>
-                    <div className="featured-products-cta">
-                        <Link to="/store" className="btn-view-all">
-                            عرض جميع المنتجات <MdArrowBack />
-                        </Link>
-                    </div>
-                </section>
-            )}
+                )}
+
+                <div className="featured-products-cta">
+                    <Link to="/store" className="btn-view-all">
+                        عرض جميع المنتجات <MdArrowBack />
+                    </Link>
+                </div>
+            </section>
 
             {/* Features Section */}
             <section className="features-section">
@@ -138,18 +309,6 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            {/* Footer */}
-            <footer className="landing-footer">
-                <div className="footer-content">
-                    <div className="footer-brand">
-                        <GiLion className="footer-logo" />
-                        <span>الأسد الذهبي</span>
-                    </div>
-                    <p className="footer-copyright">
-                        © {new Date().getFullYear()} الأسد الذهبي - جميع الحقوق محفوظة
-                    </p>
-                </div>
-            </footer>
         </div>
     );
 };
@@ -157,9 +316,9 @@ const LandingPage = () => {
 /**
  * Featured Product Card Component
  */
-const FeaturedProductCard = ({ product, currency }) => {
+const FeaturedProductCard = ({ product, currency, productLink }) => {
     return (
-        <Link to="/store" className="featured-product-card">
+        <Link to={productLink || '/store'} className="featured-product-card">
             <div className="featured-product-image-wrapper">
                 {product.images?.[0] ? (
                     <img
@@ -173,9 +332,11 @@ const FeaturedProductCard = ({ product, currency }) => {
                         <MdImage />
                     </div>
                 )}
-                <span className="featured-product-badge">
-                    <MdStar /> مميز
-                </span>
+                {Boolean(product?.featured) && (
+                    <span className="featured-product-badge">
+                        <MdStar /> مميز
+                    </span>
+                )}
             </div>
             <div className="featured-product-info">
                 <h4 className="featured-product-name">{product.name}</h4>

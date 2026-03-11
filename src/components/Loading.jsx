@@ -15,7 +15,7 @@ const Loading = () => {
                         <text x="50" y="58" textAnchor="middle" fontSize="40" fill="url(#goldGradient)" className="lion-emoji">🦁</text>
                     </svg>
                 </div>
-                <h2 className="loading-title">الأسد الذهبي</h2>
+                <h2 className="loading-title">مجمـوعة الأسـد</h2>
                 <p className="loading-text">جاري التحميل...</p>
                 <div className="loading-dots">
                     <span></span>

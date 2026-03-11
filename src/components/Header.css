@@ -705,6 +705,180 @@
   font-size: 0.75rem;
 }
 
+/* ========== PUBLIC HEADER MODE ========== */
+.public-site-header {
+  background:
+    linear-gradient(135deg, rgba(14, 14, 18, 0.92) 0%, rgba(28, 26, 20, 0.88) 48%, rgba(16, 16, 18, 0.92) 100%);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.22),
+    0 1px 0 rgba(255, 255, 255, 0.05) inset;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.public-site-header.header-scrolled {
+  background:
+    linear-gradient(135deg, rgba(12, 12, 16, 0.96) 0%, rgba(26, 24, 18, 0.95) 52%, rgba(12, 12, 16, 0.96) 100%);
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.28),
+    0 1px 0 rgba(255, 255, 255, 0.06) inset;
+}
+
+.public-header-shell {
+  min-height: 72px;
+}
+
+.public-site-header .brand-logo {
+  margin-left: 0;
+  padding: 0.7rem 1rem;
+  border: 1px solid rgba(212, 175, 55, 0.16);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(212, 175, 55, 0.08));
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.16);
+}
+
+.public-site-header .brand-logo:hover {
+  transform: translateY(-1px);
+}
+
+.public-mobile-menu-toggle {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 999px;
+  padding: 0.6rem 0.8rem;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.16);
+}
+
+.public-nav-shell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem;
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+}
+
+.public-nav-link {
+  padding: 0.7rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  letter-spacing: 0.2px;
+}
+
+.public-nav-link:hover {
+  border-color: rgba(212, 175, 55, 0.2);
+  background: rgba(212, 175, 55, 0.14);
+}
+
+.public-nav-link.active {
+  color: #111 !important;
+  background: linear-gradient(135deg, #e8c86d 0%, #d4af37 100%);
+  border-color: transparent;
+  box-shadow: 0 10px 18px rgba(212, 175, 55, 0.24);
+}
+
+.public-nav-link.active svg {
+  color: #111 !important;
+  filter: none;
+}
+
+.public-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.public-login-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.82rem 1.2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(212, 175, 55, 0.12));
+  color: var(--white);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.public-login-btn:hover {
+  color: var(--white);
+  transform: translateY(-1px);
+  border-color: rgba(212, 175, 55, 0.34);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(212, 175, 55, 0.18));
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.2);
+}
+
+.public-login-btn svg {
+  color: var(--primary-gold);
+}
+
+.public-mobile-sidebar {
+  background:
+    linear-gradient(180deg, rgba(10, 10, 14, 0.98) 0%, rgba(20, 18, 14, 0.98) 100%);
+}
+
+.public-mobile-intro {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1rem 0.2rem;
+}
+
+.public-mobile-kicker {
+  display: inline-flex;
+  margin-bottom: 0.55rem;
+  padding: 0.32rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.12);
+  color: var(--primary-gold);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.public-mobile-intro p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.7;
+  font-size: 0.92rem;
+}
+
+.public-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.public-sidebar-link {
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.public-sidebar-link.active {
+  color: #111 !important;
+  background: linear-gradient(135deg, #e8c86d 0%, #d4af37 100%);
+  border-color: transparent;
+}
+
+.public-sidebar-link.active svg {
+  color: #111 !important;
+}
+
+@media (max-width: 991.98px) {
+  .public-header-shell {
+    min-height: 64px;
+  }
+}
+
 /* Hide Sidebar on Desktop */
 @media (min-width: 992px) {
 

@@ -169,8 +169,8 @@ service cloud.firestore {
     
     // ===== Public Orders =====
     match /publicOrders/{orderId} {
-      // Anyone can create an order (anonymous checkout)
-      allow create: if true;
+      // Public checkout and tracking are handled via Cloud Functions.
+      allow create: if false;
       
       // Sales manager and owner can read and update orders
       allow read, update: if isSalesManagerOrOwner();
@@ -186,6 +186,37 @@ service cloud.firestore {
       
       // Only sales_manager or owner can manage
       allow create, update, delete: if isSalesManagerOrOwner();
+    }
+
+    // ===== POS / Analytics Derived Data =====
+    match /salesFacts/{factId} {
+      allow read: if isOwner();
+      allow create, update, delete: if false;
+    }
+
+    match /analyticsDaily/{docId} {
+      allow read: if isOwner();
+      allow create, update, delete: if false;
+    }
+
+    match /analyticsHourly/{docId} {
+      allow read: if isOwner();
+      allow create, update, delete: if false;
+    }
+
+    match /analyticsProductDaily/{docId} {
+      allow read: if isOwner();
+      allow create, update, delete: if false;
+    }
+
+    match /analyticsCityDaily/{docId} {
+      allow read: if isOwner();
+      allow create, update, delete: if false;
+    }
+
+    match /forecastSnapshots/{docId} {
+      allow read: if isOwner();
+      allow create, update, delete: if false;
     }
   }
 }

@@ -1,8 +1,97 @@
 .company-settings-page {
-    padding: 20px;
+  padding: 20px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.settings-page-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 24px;
+}
+
+.settings-page-title .title-icon {
+  color: #d4a853;
+  font-size: 28px;
+}
+
+/* ── Tabs ── */
+.settings-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e8e8ef;
+  padding-bottom: 0;
+}
+
+.settings-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #888;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  margin-bottom: -2px;
+}
+
+.settings-tab:hover {
+  color: #555;
+}
+
+.settings-tab.active {
+  color: #d4a853;
+  border-bottom-color: #d4a853;
+}
+
+.settings-tab svg {
+  font-size: 20px;
+}
+
+/* ── Tab Content ── */
+.settings-tab-content {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
   }
-  
-  .company-settings-page h1 {
-    margin-bottom: 20px;
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .settings-tabs {
+    flex-direction: column;
+    gap: 0;
+    border-bottom: none;
+  }
+
+  .settings-tab {
+    border-bottom: 1px solid #e8e8ef;
+    border-right: 3px solid transparent;
+    margin-bottom: 0;
+  }
+
+  .settings-tab.active {
+    border-bottom-color: #e8e8ef;
+    border-right-color: #d4a853;
+    background: #fdf6e3;
+  }
+}

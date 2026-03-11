@@ -4,6 +4,12 @@ import { addToCart } from '../store/cartSlice';
 import { formatCurrency } from '../utils/currency';
 import { fromCents } from '../utils/decimalUtils';
 import {
+    buildCartKey,
+    getAvailableStockForSelection,
+    hasColorVariants,
+    normalizeSelectedColor,
+} from '../utils/cartUtils';
+import {
     MdClose,
     MdAdd,
     MdRemove,
@@ -32,36 +38,56 @@ const ProductDetailsModal = ({ product, isOpen, onClose }) => {
     const [addedToCart, setAddedToCart] = useState(false);
     const [selectedColor, setSelectedColor] = useState(null);
 
+    const safeProduct = product || {};
+
+    const productHasColorVariants = hasColorVariants(safeProduct);
+    const normalizedSelectedColor = normalizeSelectedColor(safeProduct, selectedColor);
+    const maxQuantity = getAvailableStockForSelection(safeProduct, normalizedSelectedColor);
+    const canAddToCart = safeProduct.inStock && (!productHasColorVariants || Boolean(normalizedSelectedColor)) && maxQuantity > 0;
+
+    const images = safeProduct.images?.length > 0 ? safeProduct.images : [];
+
+    // Check if this product+color combo is in cart
+    const cartKey = buildCartKey(safeProduct.id, normalizedSelectedColor);
+    const isInCart = cartItems.some(item => item.cartKey === cartKey);
+
+    const selectedVariantStockText = (() => {
+        if (!productHasColorVariants || !normalizedSelectedColor) return '';
+        return `المتوفر من هذا اللون: ${maxQuantity}`;
+    })();
+
     // Early return if modal is not open or product is null
     if (!isOpen || !product) return null;
 
-    // Check if product has color variants
-    const hasColorVariants = product.colorVariants && product.colorVariants.length > 0;
-    const availableColors = hasColorVariants
-        ? product.colorVariants.filter(v => v.quantity > 0)
-        : [];
-
-    const images = product.images?.length > 0 ? product.images : [];
-
-    // Check if this product+color combo is in cart
-    const cartKey = selectedColor
-        ? `${product.id}_${selectedColor.color}`
-        : product.id;
-    const isInCart = cartItems.some(item => item.cartKey === cartKey);
+    const boundedQuantity = Number.isFinite(maxQuantity)
+        ? Math.min(quantity, Math.max(1, maxQuantity))
+        : quantity;
 
     const handleAddToCart = () => {
-        // If product has color variants and none selected, don't add
-        if (hasColorVariants && !selectedColor) {
+        if (!canAddToCart) {
             return;
         }
 
-        dispatch(addToCart({ product, quantity, selectedColor }));
+        const safeQuantity = Number.isFinite(maxQuantity)
+            ? Math.min(boundedQuantity, maxQuantity)
+            : boundedQuantity;
+
+        dispatch(addToCart({ product: safeProduct, quantity: safeQuantity, selectedColor: normalizedSelectedColor }));
         setAddedToCart(true);
         setTimeout(() => setAddedToCart(false), 2000);
     };
 
     const handleQuantityChange = (delta) => {
-        setQuantity(prev => Math.max(1, prev + delta));
+        setQuantity((prev) => {
+            const current = Number.isFinite(maxQuantity)
+                ? Math.min(prev, Math.max(1, maxQuantity))
+                : prev;
+            const nextValue = Math.max(1, current + delta);
+            if (Number.isFinite(maxQuantity)) {
+                return Math.min(nextValue, Math.max(1, maxQuantity));
+            }
+            return nextValue;
+        });
     };
 
     const handleNextImage = () => {
@@ -77,10 +103,38 @@ const ProductDetailsModal = ({ product, isOpen, onClose }) => {
     };
 
     const handleWhatsAppOrder = () => {
-        const phoneNumber = phone || '218910000000';
-        const message = encodeURIComponent(
-            `مرحباً، أرغب بطلب المنتج:\n${product.name}\nالكمية: ${quantity}\nالسعر: ${formatCurrency(fromCents(product.price * quantity), currency)}`
-        );
+        const phoneNumber = phone || '218931169753';
+        const primaryImage = images[0] || '';
+        const productDetailsLink = safeProduct.id
+            ? `${window.location.origin}/store#product-${encodeURIComponent(`${safeProduct.id}`)}`
+            : '';
+        const checkoutLink = `${window.location.origin}/checkout`;
+
+        // Keep the image URL on its own line so WhatsApp can attempt link preview.
+        const lines = [
+            '*مرحباً، أرغب بطلب المنتج:*',
+            safeProduct.name,
+            `الكمية: ${boundedQuantity}`,
+            `السعر: ${formatCurrency(fromCents(safeProduct.price * boundedQuantity), currency)}`,
+        ];
+
+        if (primaryImage) {
+            lines.push('');
+            lines.push('رابط الصورة:');
+            lines.push(primaryImage);
+        }
+
+        if (productDetailsLink) {
+            lines.push('');
+            lines.push('رابط تفاصيل المنتج (للإدارة):');
+            lines.push(productDetailsLink);
+        }
+
+        lines.push('');
+        lines.push('رابط إتمام الطلب (مع/بدون توصيل):');
+        lines.push(checkoutLink);
+
+        const message = encodeURIComponent(lines.join('\n'));
         window.open(`https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${message}`, '_blank');
     };
 
@@ -105,7 +159,7 @@ const ProductDetailsModal = ({ product, isOpen, onClose }) => {
                             {images.length > 0 ? (
                                 <img
                                     src={images[currentImageIndex]}
-                                    alt={product.name}
+                                    alt={safeProduct.name}
                                     className="gallery-image"
                                 />
                             ) : (
@@ -128,12 +182,12 @@ const ProductDetailsModal = ({ product, isOpen, onClose }) => {
 
                             {/* Badges */}
                             <div className="gallery-badges">
-                                {product.featured && (
+                                {safeProduct.featured && (
                                     <span className="gallery-badge featured">
                                         <MdStar /> مميز
                                     </span>
                                 )}
-                                {!product.inStock && (
+                                {!safeProduct.inStock && (
                                     <span className="gallery-badge out-of-stock">
                                         غير متوفر
                                     </span>
@@ -150,7 +204,7 @@ const ProductDetailsModal = ({ product, isOpen, onClose }) => {
                                         className={`thumbnail ${idx === currentImageIndex ? 'active' : ''}`}
                                         onClick={() => setCurrentImageIndex(idx)}
                                     >
-                                        <img src={img} alt={`${product.name} ${idx + 1}`} />
+                                        <img src={img} alt={`${safeProduct.name} ${idx + 1}`} />
                                     </button>
                                 ))}
                             </div>
@@ -166,35 +220,35 @@ const ProductDetailsModal = ({ product, isOpen, onClose }) => {
 
                     {/* Product Info */}
                     <div className="modal-info">
-                        <h2 className="modal-product-name">{product.name}</h2>
+                        <h2 className="modal-product-name">{safeProduct.name}</h2>
 
-                        {product.nameEn && (
-                            <p className="modal-product-name-en">{product.nameEn}</p>
+                        {safeProduct.nameEn && (
+                            <p className="modal-product-name-en">{safeProduct.nameEn}</p>
                         )}
 
                         <div className="modal-price">
-                            {formatCurrency(fromCents(product.price), currency)}
+                            {formatCurrency(fromCents(safeProduct.price), currency)}
                         </div>
 
-                        {product.description && (
+                        {safeProduct.description && (
                             <div className="modal-description">
                                 <h4>الوصف</h4>
-                                <p>{product.description}</p>
+                                <p>{safeProduct.description}</p>
                             </div>
                         )}
 
                         {/* Color Variants Selector */}
-                        {hasColorVariants && (
+                        {productHasColorVariants && (
                             <div className="modal-color-variants">
                                 <h4>
                                     <MdColorLens className="me-1" />
                                     اختر اللون
                                 </h4>
                                 <div className="color-options">
-                                    {product.colorVariants.map((variant, idx) => (
+                                    {safeProduct.colorVariants.map((variant, idx) => (
                                         <button
                                             key={idx}
-                                            className={`color-option ${selectedColor?.color === variant.color ? 'selected' : ''} ${variant.quantity <= 0 ? 'out-of-stock' : ''}`}
+                                            className={`color-option ${normalizedSelectedColor?.colorKey === normalizeSelectedColor(safeProduct, variant)?.colorKey ? 'selected' : ''} ${variant.quantity <= 0 ? 'out-of-stock' : ''}`}
                                             onClick={() => variant.quantity > 0 && setSelectedColor(variant)}
                                             disabled={variant.quantity <= 0}
                                             title={`${variant.color} (${variant.quantity > 0 ? `متوفر: ${variant.quantity}` : 'غير متوفر'})`}
@@ -205,20 +259,26 @@ const ProductDetailsModal = ({ product, isOpen, onClose }) => {
                                             />
                                             <span className="color-name">{variant.color}</span>
                                             {variant.quantity <= 0 && <span className="out-label">نفد</span>}
-                                            {selectedColor?.color === variant.color && (
+                                            <span className="variant-stock-label">
+                                                {variant.quantity > 0 ? `${variant.quantity} قطعة` : 'نفد'}
+                                            </span>
+                                            {normalizedSelectedColor?.colorKey === normalizeSelectedColor(safeProduct, variant)?.colorKey && (
                                                 <MdCheck className="check-icon" />
                                             )}
                                         </button>
                                     ))}
                                 </div>
-                                {hasColorVariants && !selectedColor && (
+                                {productHasColorVariants && !normalizedSelectedColor && (
                                     <p className="color-hint">يرجى اختيار اللون</p>
+                                )}
+                                {selectedVariantStockText && (
+                                    <p className="color-stock-hint">{selectedVariantStockText}</p>
                                 )}
                             </div>
                         )}
 
                         {/* Quantity Selector */}
-                        {product.inStock && (
+                        {safeProduct.inStock && (
                             <div className="modal-quantity">
                                 <span className="quantity-label">الكمية:</span>
                                 <div className="quantity-controls">
@@ -229,10 +289,11 @@ const ProductDetailsModal = ({ product, isOpen, onClose }) => {
                                     >
                                         <MdRemove />
                                     </button>
-                                    <span className="quantity-value">{quantity}</span>
+                                    <span className="quantity-value">{boundedQuantity}</span>
                                     <button
                                         className="quantity-btn"
                                         onClick={() => handleQuantityChange(1)}
+                                        disabled={Number.isFinite(maxQuantity) && boundedQuantity >= maxQuantity}
                                     >
                                         <MdAdd />
                                     </button>
@@ -241,20 +302,20 @@ const ProductDetailsModal = ({ product, isOpen, onClose }) => {
                         )}
 
                         {/* Total */}
-                        {product.inStock && quantity > 1 && (
+                        {safeProduct.inStock && boundedQuantity > 1 && (
                             <div className="modal-total">
-                                الإجمالي: <strong>{formatCurrency(fromCents(product.price * quantity), currency)}</strong>
+                                الإجمالي: <strong>{formatCurrency(fromCents(safeProduct.price * boundedQuantity), currency)}</strong>
                             </div>
                         )}
 
                         {/* Action Buttons */}
                         <div className="modal-actions">
-                            {product.inStock ? (
+                            {safeProduct.inStock ? (
                                 <>
                                     <button
                                         className={`btn-add-cart ${addedToCart ? 'added' : ''} ${isInCart && !addedToCart ? 'in-cart' : ''}`}
                                         onClick={handleAddToCart}
-                                        disabled={hasColorVariants && !selectedColor}
+                                        disabled={!canAddToCart}
                                     >
                                         {addedToCart ? (
                                             <>
@@ -266,7 +327,8 @@ const ProductDetailsModal = ({ product, isOpen, onClose }) => {
                                             </>
                                         ) : (
                                             <>
-                                                <MdShoppingCart /> أضف للسلة
+                                                <MdShoppingCart />
+                                                {!canAddToCart && productHasColorVariants ? 'اختر اللون أولاً' : 'أضف للسلة'}
                                             </>
                                         )}
                                     </button>
@@ -286,8 +348,8 @@ const ProductDetailsModal = ({ product, isOpen, onClose }) => {
                         </div>
 
                         {/* Stock Status */}
-                        <div className={`modal-stock-status ${product.inStock ? 'in-stock' : 'out'}`}>
-                            {product.inStock ? '✓ متوفر في المخزون' : '✗ غير متوفر'}
+                        <div className={`modal-stock-status ${safeProduct.inStock ? 'in-stock' : 'out'}`}>
+                            {safeProduct.inStock ? '✓ متوفر في المخزون' : '✗ غير متوفر'}
                         </div>
                     </div>
                 </div>

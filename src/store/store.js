@@ -8,6 +8,7 @@ import transactionsReducer from './transactionsSlice';
 import categoriesReducer from './categoriesSlice';
 // Public Store
 import publicProductsReducer from './publicProductsSlice';
+import publicCategoriesReducer from './publicCategoriesSlice';
 import publicOrdersReducer from './publicOrdersSlice';
 import deliveryCitiesReducer from './deliveryCitiesSlice';
 import cartReducer from './cartSlice';
@@ -24,6 +25,7 @@ export const store = configureStore({
     categories: categoriesReducer,
     // Public Store
     publicProducts: publicProductsReducer,
+    publicCategories: publicCategoriesReducer,
     publicOrders: publicOrdersReducer,
     deliveryCities: deliveryCitiesReducer,
     cart: cartReducer,

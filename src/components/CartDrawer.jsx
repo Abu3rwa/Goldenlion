@@ -36,7 +36,7 @@ const CartDrawer = () => {
     const itemCount = useSelector(selectCartItemCount);
     const subtotal = useSelector(selectCartSubtotal);
     const isOpen = useSelector(selectIsCartOpen);
-    const { currency, phone } = useSelector((state) => state.company);
+    const { currency } = useSelector((state) => state.company);
 
     const handleClose = () => {
         dispatch(setCartOpen(false));

@@ -10,10 +10,12 @@ import {
   MdDashboard,
   MdAddBox,
   MdLogout,
+  MdLogin,
   MdHistory,
   MdPeople,
   MdSettings,
   MdStorefront,
+  MdHome,
   MdArrowDownward,
   MdArrowUpward,
   MdSwapVert,
@@ -23,7 +25,9 @@ import {
   MdDescription,
   MdPictureAsPdf,
   MdCategory,
-  MdShoppingCart
+  MdShoppingCart,
+  MdPointOfSale,
+  MdAnalytics
 } from 'react-icons/md';
 
 const Header = () => {
@@ -34,11 +38,20 @@ const Header = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [recentReceipts, setRecentReceipts] = useState([]);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const toggleMenu = () => setMobileMenuOpen(!mobileMenuOpen);
   const closeMenu = () => setMobileMenuOpen(false);
 
   const isActive = (path) => location.pathname === path ? 'active fw-bold text-gold' : '';
+  const isPublicRoute = (
+    location.pathname === '/' ||
+    location.pathname === '/store' ||
+    location.pathname === '/login' ||
+    location.pathname === '/checkout' ||
+    location.pathname.startsWith('/orders/')
+  );
+  const isPublicGuestView = !user && isPublicRoute;
 
   // Fetch recent receipts on mount
   useEffect(() => {
@@ -59,6 +72,16 @@ const Header = () => {
     }
   }, [user, location.pathname]); // Refresh on navigation
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 12);
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const handleLogout = () => {
     dispatch(logout());
     closeMenu();
@@ -73,6 +96,8 @@ const Header = () => {
   const canViewAllPages = userService.canPerformAction(roles, 'VIEW_ALL_PAGES');
   const canManageUsers = userService.canPerformAction(roles, 'MANAGE_USERS');
   const canViewStore = userService.canPerformAction(roles, 'VIEW_STORE_DASHBOARD');
+  const canUsePos = userService.canPerformAction(roles, 'USE_POS');
+  const canViewAnalytics = userService.canPerformAction(roles, 'VIEW_ADVANCED_ANALYTICS');
 
   const getRoleLabel = (role) => {
     switch (role) {
@@ -94,16 +119,11 @@ const Header = () => {
     <>
       <GiLion className="brand-icon fs-2" />
       <div className="d-flex flex-column lh-1">
-        <span className="fs-6 ">{companyName || 'الأسد الذهبي'}</span>
+        <span className="fs-6 ">{companyName || ' مجمـوعة الأسـد  '}</span>
         {companyNameEn && <span className="small text-white-50" style={{ fontSize: '0.7em', letterSpacing: '1px' }}>{companyNameEn}</span>}
       </div>
     </>
   );
-
-  // Hide header on landing page for non-authenticated users
-  if (!user && location.pathname === '/') {
-    return null;
-  }
 
   // Staff-only users see minimal header
   if (user && isStaffOnly) {
@@ -130,15 +150,26 @@ const Header = () => {
     );
   }
 
+  const headerClassName = [
+    'app-header',
+    'navbar',
+    'navbar-expand-lg',
+    'navbar-dark',
+    'shadow-sm',
+    'sticky-top',
+    isPublicGuestView ? 'public-site-header' : '',
+    isScrolled ? 'header-scrolled' : '',
+  ].filter(Boolean).join(' ');
+
   return (
-    <header className="app-header navbar navbar-expand-lg navbar-dark shadow-sm sticky-top">
-      <div className="header-container container-fluid">
+    <header className={headerClassName}>
+      <div className={`header-container container-fluid ${isPublicGuestView ? 'public-header-shell' : ''}`}>
         <Link to="/" className="brand-logo navbar-brand d-flex align-items-center gap-2 text-gold fw-bold" onClick={closeMenu}>
           <LogoContent />
         </Link>
 
         <button
-          className="navbar-toggler mobile-menu-toggle border-0 shadow-none"
+          className={`navbar-toggler mobile-menu-toggle border-0 shadow-none ${isPublicGuestView ? 'public-mobile-menu-toggle' : ''}`}
           type="button"
           onClick={toggleMenu}
           aria-label="Toggle navigation"
@@ -148,6 +179,17 @@ const Header = () => {
 
         {/* Desktop Navigation */}
         <div className="collapse navbar-collapse d-none d-lg-block">
+          {isPublicGuestView && (
+            <div className="public-nav-shell me-auto">
+              <Link to="/" className={`nav-link public-nav-link ${isActive('/')}`} onClick={closeMenu}>
+                <MdHome /> الرئيسية
+              </Link>
+              <Link to="/store" className={`nav-link public-nav-link ${isActive('/store')}`} onClick={closeMenu}>
+                <MdStorefront /> منتجات
+              </Link>
+            </div>
+          )}
+
           {user && (
             <div className="d-flex align-items-center gap-2 me-auto">
               {/* Dashboard Link - Role Based */}
@@ -214,6 +256,8 @@ const Header = () => {
                   <option value="/admin/store/products">📦 المنتجات</option>
                   <option value="/admin/store/orders">🧾 الطلبات</option>
                   <option value="/admin/store/cities">🏙️ مدن التوصيل</option>
+                  {canUsePos && <option value="/admin/pos">🧾 نقطة البيع</option>}
+                  {canViewAnalytics && <option value="/admin/analytics">📈 التحليلات</option>}
                 </select>
               )}
 
@@ -232,6 +276,7 @@ const Header = () => {
                   <option value="/admin/store/products">📦 المنتجات</option>
                   <option value="/admin/store/orders">🧾 الطلبات</option>
                   <option value="/admin/store/cities">🏙️ مدن التوصيل</option>
+                  {canUsePos && <option value="/admin/pos">🧾 نقطة البيع</option>}
                 </select>
               )}
 
@@ -267,6 +312,14 @@ const Header = () => {
               </button>
             </div>
           )}
+
+          {isPublicGuestView && (
+            <div className="public-header-actions">
+              <Link to="/login" className="public-login-btn" onClick={closeMenu}>
+                <MdLogin /> <span>Login</span>
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Mobile Sidebar Overlay */}
@@ -276,7 +329,7 @@ const Header = () => {
         />
 
         {/* Mobile Sidebar */}
-        <div className={`mobile-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
+        <div className={`mobile-sidebar ${mobileMenuOpen ? 'open' : ''} ${isPublicGuestView ? 'public-mobile-sidebar' : ''}`}>
           <div className="sidebar-header">
             <h5 className="text-gold m-0 fw-bold">القائمة</h5>
             <button className="btn btn-link text-white p-0" onClick={closeMenu}>
@@ -285,6 +338,32 @@ const Header = () => {
           </div>
 
           <div className="sidebar-content">
+            {isPublicGuestView && (
+              <>
+                <div className="public-mobile-intro">
+                  <span className="public-mobile-kicker">Golden Lion</span>
+                  <p>اكتشف أحدث المنتجات من الواجهة الرئيسية بدون تشتيت.</p>
+                </div>
+                <ul className="sidebar-nav public-sidebar-nav">
+                <li className="sidebar-item">
+                  <Link to="/" className={`sidebar-link public-sidebar-link ${isActive('/')}`} onClick={closeMenu}>
+                    <MdHome /> الرئيسية
+                  </Link>
+                </li>
+                <li className="sidebar-item">
+                  <Link to="/store" className={`sidebar-link public-sidebar-link ${isActive('/store')}`} onClick={closeMenu}>
+                    <MdStorefront /> منتجات
+                  </Link>
+                </li>
+                <li className="sidebar-item">
+                  <Link to="/login" className={`sidebar-link public-sidebar-link ${isActive('/login')}`} onClick={closeMenu}>
+                    <MdLogin /> Login
+                  </Link>
+                </li>
+                </ul>
+              </>
+            )}
+
             {user && (
               <ul className="sidebar-nav">
                 {/* Role-based dashboard link */}
@@ -395,6 +474,20 @@ const Header = () => {
                         <MdShoppingCart /> لوحة المتجر
                       </Link>
                     </li>
+                    {canUsePos && (
+                      <li className="sidebar-item">
+                        <Link to="/admin/pos" className={`sidebar-link ${isActive('/admin/pos')}`} onClick={closeMenu}>
+                          <MdPointOfSale /> نقطة البيع
+                        </Link>
+                      </li>
+                    )}
+                    {canViewAnalytics && (
+                      <li className="sidebar-item">
+                        <Link to="/admin/analytics" className={`sidebar-link ${isActive('/admin/analytics')}`} onClick={closeMenu}>
+                          <MdAnalytics /> التحليلات
+                        </Link>
+                      </li>
+                    )}
                   </>
                 )}
 
@@ -417,6 +510,13 @@ const Header = () => {
                         <MdStorefront /> مدن التوصيل
                       </Link>
                     </li>
+                    {canUsePos && (
+                      <li className="sidebar-item">
+                        <Link to="/admin/pos" className={`sidebar-link ${isActive('/admin/pos')}`} onClick={closeMenu}>
+                          <MdPointOfSale /> نقطة البيع
+                        </Link>
+                      </li>
+                    )}
                   </>
                 )}
 

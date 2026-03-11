@@ -278,7 +278,7 @@ const TransactionsPage = () => {
                     <Receipt
                         transaction={selectedTxForPrint}
                         company={{
-                            companyName: companyName || 'الأسد الذهبي',
+                            companyName: companyName || 'مجمـوعة الأسـد',
                             companyNameEn,
                             currency,
                             address,

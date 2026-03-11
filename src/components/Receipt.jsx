@@ -67,7 +67,7 @@ const Receipt = ({ transaction, company }) => {
                         </div>
                         <div>
                             <h1 className="fw-bold m-0 text-dark" style={{ fontSize: '24px', letterSpacing: '-0.5px' }}>
-                                {company.companyName || 'الأسد الذهبي'}
+                                {company.companyName || 'مجمـوعة الأسـد'}
                             </h1>
                             {company.companyNameEn && (
                                 <h2 className="m-0 text-muted" style={{ fontSize: '16px', fontWeight: 'bold', fontFamily: 'serif', marginTop: '2px' }}>

@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { addPublicProduct, updatePublicProduct, fetchPublicProductById, clearCurrentProduct } from '../../../store/publicProductsSlice';
+import { addPublicCategory, fetchPublicCategories } from '../../../store/publicCategoriesSlice';
 import { toCents, fromCents } from '../../../utils/decimalUtils';
 import { userService } from '../../../services/userService';
-import { MdSave, MdArrowBack, MdAddPhotoAlternate, MdDelete, MdAdd, MdColorLens } from 'react-icons/md';
+import { MdSave, MdArrowBack, MdAddPhotoAlternate, MdDelete, MdAdd, MdColorLens, MdCategory } from 'react-icons/md';
 import './StoreProductForm.css';
 
 const StoreProductForm = () => {
@@ -15,11 +16,15 @@ const StoreProductForm = () => {
 
     const { currentProduct } = useSelector((state) => state.publicProducts);
     const { userProfile } = useSelector((state) => state.auth);
+    const { categories } = useSelector((state) => state.publicCategories);
 
     const [code, setCode] = useState('');
     const [name, setName] = useState('');
     const [nameEn, setNameEn] = useState('');
     const [description, setDescription] = useState('');
+    const [categoryId, setCategoryId] = useState('');
+    const [categoryMode, setCategoryMode] = useState('existing');
+    const [newCategoryName, setNewCategoryName] = useState('');
     const [price, setPrice] = useState('');
     const [images, setImages] = useState([]);
     const [newImageUrl, setNewImageUrl] = useState('');
@@ -28,6 +33,12 @@ const StoreProductForm = () => {
     const [hasDelivery, setHasDelivery] = useState(true);
     const [sortOrder, setSortOrder] = useState(0);
     const [costPrice, setCostPrice] = useState('');
+    const [barcode, setBarcode] = useState('');
+    const [sku, setSku] = useState('');
+    const [minimumStock, setMinimumStock] = useState('');
+    const [reorderPoint, setReorderPoint] = useState('');
+    const [leadTimeDays, setLeadTimeDays] = useState('');
+    const [preferredSupplierId, setPreferredSupplierId] = useState('');
 
     // Color Variants
     const [colorVariants, setColorVariants] = useState([]);
@@ -36,6 +47,7 @@ const StoreProductForm = () => {
     const [newColorQty, setNewColorQty] = useState('');
 
     const [loading, setLoading] = useState(false);
+    const [creatingCategory, setCreatingCategory] = useState(false);
     const [error, setError] = useState('');
 
     const canManage = userService.canPerformAction(
@@ -44,6 +56,7 @@ const StoreProductForm = () => {
     );
 
     useEffect(() => {
+        dispatch(fetchPublicCategories());
         if (isEditing) {
             dispatch(fetchPublicProductById(id));
         }
@@ -58,6 +71,9 @@ const StoreProductForm = () => {
             setName(currentProduct.name || '');
             setNameEn(currentProduct.nameEn || '');
             setDescription(currentProduct.description || '');
+            setCategoryId(currentProduct.categoryId || '');
+            setCategoryMode('existing');
+            setNewCategoryName('');
             setPrice(fromCents(currentProduct.price || 0).toString());
             setImages(currentProduct.images || []);
             setInStock(currentProduct.inStock !== false);
@@ -65,6 +81,12 @@ const StoreProductForm = () => {
             setHasDelivery(currentProduct.hasDelivery !== false);
             setSortOrder(currentProduct.sortOrder || 0);
             setCostPrice(fromCents(currentProduct.costPrice || 0).toString());
+            setBarcode(currentProduct.barcode || '');
+            setSku(currentProduct.sku || '');
+            setMinimumStock(`${currentProduct.minimumStock || 0}`);
+            setReorderPoint(`${currentProduct.reorderPoint || 0}`);
+            setLeadTimeDays(`${currentProduct.leadTimeDays || 0}`);
+            setPreferredSupplierId(currentProduct.preferredSupplierId || '');
             setColorVariants(currentProduct.colorVariants || []);
         }
     }, [currentProduct, isEditing]);
@@ -117,6 +139,53 @@ const StoreProductForm = () => {
     // Calculate total stock from variants
     const totalStock = colorVariants.reduce((sum, v) => sum + (v.quantity || 0), 0);
 
+    const findCategoryByName = (rawName) => {
+        const normalizedName = `${rawName || ''}`.trim().toLowerCase();
+        if (!normalizedName) return null;
+
+        return categories.find(
+            (category) => `${category?.name || ''}`.trim().toLowerCase() === normalizedName
+        ) || null;
+    };
+
+    const handleCreateCategory = async () => {
+        const normalizedName = `${newCategoryName || ''}`.trim();
+        if (!normalizedName) {
+            setError('اسم الفئة الجديدة مطلوب');
+            return;
+        }
+
+        const localMatch = findCategoryByName(normalizedName);
+        if (localMatch) {
+            setCategoryId(localMatch.id);
+            setCategoryMode('existing');
+            setNewCategoryName('');
+            setError('');
+            return;
+        }
+
+        setCreatingCategory(true);
+        setError('');
+
+        try {
+            const createdCategory = await dispatch(
+                addPublicCategory({
+                    name: normalizedName,
+                    userId: userProfile?.id,
+                })
+            ).unwrap();
+
+            await dispatch(fetchPublicCategories()).unwrap();
+            setCategoryId(createdCategory.id);
+            setCategoryMode('existing');
+            setNewCategoryName('');
+        } catch (err) {
+            setError(err?.message || 'تعذر إنشاء الفئة');
+        } finally {
+            setCreatingCategory(false);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -131,10 +200,24 @@ const StoreProductForm = () => {
             return;
         }
 
+        if (categoryMode === 'new' && !newCategoryName.trim()) {
+            setError('اسم الفئة الجديدة مطلوب');
+            return;
+        }
+
+        if (categoryMode === 'existing' && !categoryId) {
+            setError('يرجى اختيار فئة المنتج');
+            return;
+        }
+
         setLoading(true);
+
+        let resolvedCategory = null;
 
         const productData = {
             code: code.trim(),
+            barcode: barcode.trim(),
+            sku: sku.trim(),
             name: name.trim(),
             nameEn: nameEn.trim(),
             description: description.trim(),
@@ -146,10 +229,39 @@ const StoreProductForm = () => {
             hasDelivery,
             sortOrder: parseInt(sortOrder) || 0,
             colorVariants: colorVariants,
-            totalStock: totalStock
+            totalStock: totalStock,
+            minimumStock: parseInt(minimumStock, 10) || 0,
+            reorderPoint: parseInt(reorderPoint, 10) || 0,
+            leadTimeDays: parseInt(leadTimeDays, 10) || 0,
+            preferredSupplierId: preferredSupplierId.trim(),
         };
 
         try {
+            if (categoryMode === 'new') {
+                const normalizedNewCategory = newCategoryName.trim();
+                resolvedCategory = findCategoryByName(normalizedNewCategory);
+
+                if (!resolvedCategory) {
+                    resolvedCategory = await dispatch(
+                        addPublicCategory({
+                            name: normalizedNewCategory,
+                            userId: userProfile?.id,
+                        })
+                    ).unwrap();
+                }
+            } else {
+                resolvedCategory = categories.find((category) => category.id === categoryId);
+            }
+
+            if (!resolvedCategory) {
+                setError('تعذر تحديد الفئة. حاول مرة أخرى.');
+                setLoading(false);
+                return;
+            }
+
+            productData.categoryId = resolvedCategory.id;
+            productData.categoryName = resolvedCategory.name;
+
             if (isEditing) {
                 await dispatch(updatePublicProduct({ id, productData })).unwrap();
             } else {
@@ -222,7 +334,7 @@ const StoreProductForm = () => {
                                             dir="ltr"
                                         />
                                     </div>
-                                    <div className="col-4">
+                                    <div className="col-md-4">
                                         <label className="form-label small mb-1">الكود</label>
                                         <input
                                             type="text"
@@ -233,7 +345,29 @@ const StoreProductForm = () => {
                                             dir="ltr"
                                         />
                                     </div>
-                                    <div className="col-4">
+                                    <div className="col-md-4">
+                                        <label className="form-label small mb-1">Barcode</label>
+                                        <input
+                                            type="text"
+                                            className="form-control form-control-sm"
+                                            value={barcode}
+                                            onChange={(e) => setBarcode(e.target.value)}
+                                            placeholder="0123456789012"
+                                            dir="ltr"
+                                        />
+                                    </div>
+                                    <div className="col-md-4">
+                                        <label className="form-label small mb-1">SKU</label>
+                                        <input
+                                            type="text"
+                                            className="form-control form-control-sm"
+                                            value={sku}
+                                            onChange={(e) => setSku(e.target.value)}
+                                            placeholder="GL-BAG-001"
+                                            dir="ltr"
+                                        />
+                                    </div>
+                                    <div className="col-md-4">
                                         <label className="form-label small mb-1">سعر البيع *</label>
                                         <input
                                             type="number"
@@ -245,7 +379,7 @@ const StoreProductForm = () => {
                                             required
                                         />
                                     </div>
-                                    <div className="col-4">
+                                    <div className="col-md-4">
                                         <label className="form-label small mb-1">سعر التكلفة</label>
                                         <input
                                             type="number"
@@ -254,6 +388,50 @@ const StoreProductForm = () => {
                                             onChange={(e) => setCostPrice(e.target.value)}
                                             min="0"
                                             step="0.01"
+                                        />
+                                    </div>
+                                    <div className="col-md-4">
+                                        <label className="form-label small mb-1">الحد الأدنى للمخزون</label>
+                                        <input
+                                            type="number"
+                                            className="form-control form-control-sm"
+                                            value={minimumStock}
+                                            onChange={(e) => setMinimumStock(e.target.value)}
+                                            min="0"
+                                            step="1"
+                                        />
+                                    </div>
+                                    <div className="col-md-4">
+                                        <label className="form-label small mb-1">نقطة إعادة الطلب</label>
+                                        <input
+                                            type="number"
+                                            className="form-control form-control-sm"
+                                            value={reorderPoint}
+                                            onChange={(e) => setReorderPoint(e.target.value)}
+                                            min="0"
+                                            step="1"
+                                        />
+                                    </div>
+                                    <div className="col-md-4">
+                                        <label className="form-label small mb-1">مدة التوريد بالأيام</label>
+                                        <input
+                                            type="number"
+                                            className="form-control form-control-sm"
+                                            value={leadTimeDays}
+                                            onChange={(e) => setLeadTimeDays(e.target.value)}
+                                            min="0"
+                                            step="1"
+                                        />
+                                    </div>
+                                    <div className="col-md-4">
+                                        <label className="form-label small mb-1">معرّف المورد المفضل</label>
+                                        <input
+                                            type="text"
+                                            className="form-control form-control-sm"
+                                            value={preferredSupplierId}
+                                            onChange={(e) => setPreferredSupplierId(e.target.value)}
+                                            placeholder="supplier-001"
+                                            dir="ltr"
                                         />
                                     </div>
                                     <div className="col-12">
@@ -265,6 +443,67 @@ const StoreProductForm = () => {
                                             rows="2"
                                             placeholder="وصف المنتج..."
                                         />
+                                    </div>
+                                    <div className="col-12">
+                                        <label className="form-label small mb-1 d-flex align-items-center gap-1">
+                                            <MdCategory /> الفئة *
+                                        </label>
+                                        <div className="d-flex gap-2 mb-2 flex-wrap">
+                                            <button
+                                                type="button"
+                                                className={`btn btn-sm ${categoryMode === 'existing' ? 'btn-gold' : 'btn-outline-secondary'}`}
+                                                onClick={() => setCategoryMode('existing')}
+                                            >
+                                                اختيار فئة
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`btn btn-sm ${categoryMode === 'new' ? 'btn-gold' : 'btn-outline-secondary'}`}
+                                                onClick={() => setCategoryMode('new')}
+                                            >
+                                                إضافة فئة جديدة
+                                            </button>
+                                        </div>
+
+                                        {categoryMode === 'existing' ? (
+                                            <select
+                                                className="form-select form-select-sm"
+                                                value={categoryId}
+                                                onChange={(e) => setCategoryId(e.target.value)}
+                                                required
+                                            >
+                                                <option value="">-- اختر الفئة --</option>
+                                                {categories.map((category) => (
+                                                    <option key={category.id} value={category.id}>
+                                                        {category.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <>
+                                                <div className="input-group input-group-sm">
+                                                    <input
+                                                        type="text"
+                                                        className="form-control form-control-sm"
+                                                        value={newCategoryName}
+                                                        onChange={(e) => setNewCategoryName(e.target.value)}
+                                                        placeholder="مثال: شنط يد نسائية"
+                                                        required
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-outline-gold"
+                                                        onClick={handleCreateCategory}
+                                                        disabled={creatingCategory || !newCategoryName.trim()}
+                                                    >
+                                                        {creatingCategory ? 'جاري الإنشاء...' : 'إنشاء الفئة'}
+                                                    </button>
+                                                </div>
+                                                <small className="text-muted d-block mt-1">
+                                                    يمكنك إنشاء الفئة مسبقا ثم ستظهر مباشرة في قائمة الفئات.
+                                                </small>
+                                            </>
+                                        )}
                                     </div>
                                     {/* Compact Image Input */}
                                     <div className="col-12">
@@ -447,7 +686,7 @@ const StoreProductForm = () => {
                                         <button
                                             type="submit"
                                             className="btn btn-gold w-100"
-                                            disabled={loading}
+                                            disabled={loading || creatingCategory}
                                         >
                                             {loading ? (
                                                 <span className="spinner-border spinner-border-sm me-2" />

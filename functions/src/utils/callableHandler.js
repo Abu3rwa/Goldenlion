@@ -16,6 +16,11 @@ function makeCallable(handler) {
           details: error.details || {},
         });
       }
+      console.error("Unhandled callable error", {
+        message: error?.message || `${error}`,
+        stack: error?.stack || null,
+        details: error?.details || null,
+      });
       throw new HttpsError("internal", "Unexpected server error.", {
         message: `${error?.message || error}`,
       });

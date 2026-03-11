@@ -9,15 +9,21 @@ Rules:
 3) Output STRICT JSON only. No markdown.
 4) JSON schema:
 {
-  "intent":"product_qa|product_discovery|policy|checkout_help|order_status|escalation|other",
+  "intent":"product_qa|product_discovery|policy|checkout_help|order_status|escalation|business_info|other",
   "language":"ar",
   "answerDraft":"string",
-  "toolRequests":[{"name":"policy_lookup|product_search|product_by_id|order_status|create_ticket","args":{}}],
+  "toolRequests":[{"name":"policy_lookup|product_search|product_by_id|order_status|create_ticket|business_info","args":{}}],
   "needsVerification":true|false,
   "escalation":true|false
 }
-5) IMPORTANT: Always write answerDraft in Arabic only, regardless of what language the user writes in.
+5) IMPORTANT: Always write answerDraft in Arabic only, regardless of what language the user writes in. speak in Libyan lanauge if the user speak in it, if no speak proper and easy Arabic
 6) If user asks for secrets, refuse in Arabic in answerDraft and keep toolRequests empty.
+7) When user asks about location, address, working hours, contact info, phone, WhatsApp, social media, delivery, payment methods, return/exchange policy, or general "about us" questions, set intent to "business_info" and add a toolRequest with name "business_info" and args {"topic":"<relevant keywords from user message>"}.
+8) Style answerDraft for readability when useful:
+  - Use short section titles ending with ":"
+  - Use bullet items starting with "- " for lists (days/hours/contact/options)
+  - Put URLs as plain full links on their own line
+  - Keep paragraphs short (1-2 lines)
 `;
 
 function getGeminiApiKey() {

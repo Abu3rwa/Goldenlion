@@ -17,6 +17,8 @@
     align-items: center;
     justify-content: center;
     padding: 1rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     animation: fadeIn 0.3s ease;
 }
 
@@ -36,9 +38,11 @@
     border-radius: 24px;
     max-width: 1000px;
     width: 100%;
-    max-height: 90vh;
+    max-height: min(90dvh, calc(100dvh - 2rem));
     overflow: hidden;
     position: relative;
+    display: flex;
+    flex-direction: column;
     box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
     animation: slideUp 0.4s ease;
 }
@@ -84,7 +88,8 @@
 .modal-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    max-height: 90vh;
+    max-height: min(90dvh, calc(100dvh - 2rem));
+    min-height: 0;
 }
 
 /* ========== IMAGE GALLERY ========== */
@@ -248,7 +253,9 @@
 .modal-info {
     padding: 2rem;
     overflow-y: auto;
-    max-height: 90vh;
+    max-height: min(90dvh, calc(100dvh - 2rem));
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
@@ -372,11 +379,23 @@
     font-size: 1rem;
 }
 
+.variant-stock-label {
+    font-size: 0.75rem;
+    color: #666;
+}
+
 .color-hint {
     margin: 0.5rem 0 0 0;
     font-size: 0.85rem;
     color: #dc3545;
     font-weight: 500;
+}
+
+.color-stock-hint {
+    margin: 0.5rem 0 0 0;
+    font-size: 0.85rem;
+    color: #198754;
+    font-weight: 600;
 }
 
 /* Quantity Selector */
@@ -490,6 +509,13 @@
     color: #1A1A1A;
 }
 
+.btn-add-cart:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
 .btn-whatsapp-order {
     display: flex;
     align-items: center;
@@ -548,14 +574,16 @@
 @media (max-width: 768px) {
     .product-modal {
         border-radius: 20px 20px 0 0;
-        max-height: 95vh;
+        max-height: min(95dvh, 100dvh);
         margin-top: auto;
     }
 
     .modal-content {
         grid-template-columns: 1fr;
-        max-height: 95vh;
+        max-height: min(95dvh, 100dvh);
         overflow-y: auto;
+        min-height: 0;
+        -webkit-overflow-scrolling: touch;
     }
 
     .gallery-main {
@@ -600,7 +628,7 @@
     }
 
     .product-modal {
-        max-height: 90vh;
+        max-height: min(92dvh, 100dvh);
         border-radius: 24px 24px 0 0;
     }
 

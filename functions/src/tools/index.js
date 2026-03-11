@@ -5,6 +5,7 @@ const { productSearchTool } = require("./productSearchTool");
 const { productByIdTool } = require("./productByIdTool");
 const { orderStatusTool } = require("./orderStatusTool");
 const { createTicketTool } = require("./createTicketTool");
+const { businessInfoTool } = require("./businessInfoTool");
 
 const TOOL_MAP = {
   [TOOL_NAMES.POLICY_LOOKUP]: policyLookupTool,
@@ -12,6 +13,7 @@ const TOOL_MAP = {
   [TOOL_NAMES.PRODUCT_BY_ID]: productByIdTool,
   [TOOL_NAMES.ORDER_STATUS]: orderStatusTool,
   [TOOL_NAMES.CREATE_TICKET]: createTicketTool,
+  [TOOL_NAMES.BUSINESS_INFO]: businessInfoTool,
 };
 
 /**

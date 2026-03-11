@@ -77,6 +77,74 @@ function buildQuickReplies(locale) {
   return ["تتبع الطلب", "الشحن", "الاسترجاع", "اقتراح منتجات", "التحدث مع الدعم"];
 }
 
+function formatBusinessInfoResponse(data, locale) {
+  if (!data) {
+    return locale === "en"
+      ? "Sorry, I don't have that information right now. Please contact support directly."
+      : "للأسف ما عندي المعلومة حالياً. تواصل مع الدعم مباشرة.";
+  }
+  const parts = [];
+  const pushSection = (title, lines = []) => {
+    const validLines = lines.filter((line) => `${line || ""}`.trim());
+    if (!validLines.length) return;
+    parts.push(title);
+    validLines.forEach((line) => parts.push(`- ${line}`));
+    parts.push("");
+  };
+
+  if (data.location) {
+    pushSection("📍 الموقع:", [
+      data.location.address ? `العنوان: ${data.location.address}` : "",
+      data.location.city ? `المدينة: ${data.location.city}` : "",
+      data.location.googleMapsUrl ? `الخريطة: ${data.location.googleMapsUrl}` : "",
+    ]);
+  }
+
+  if (data.workingHours) {
+    pushSection("🕐 ساعات العمل:", [
+      data.workingHours.weekdays ? `أيام الأسبوع: ${data.workingHours.weekdays}` : "",
+      data.workingHours.friday ? `الجمعة: ${data.workingHours.friday}` : "",
+      data.workingHours.saturday ? `السبت: ${data.workingHours.saturday}` : "",
+      data.workingHours.notes ? `ملاحظات: ${data.workingHours.notes}` : "",
+    ]);
+  }
+
+  if (data.contact) {
+    pushSection("📞 التواصل:", [
+      data.contact.phone ? `الهاتف: ${data.contact.phone}` : "",
+      data.contact.whatsapp ? `واتساب: ${data.contact.whatsapp}` : "",
+      data.contact.email ? `البريد: ${data.contact.email}` : "",
+      data.contact.instagram ? `انستقرام: ${data.contact.instagram}` : "",
+      data.contact.facebook ? `فيسبوك: ${data.contact.facebook}` : "",
+    ]);
+  }
+
+  if (data.delivery) {
+    pushSection("🚚 التوصيل:", [data.delivery]);
+  }
+
+  if (data.payment) {
+    pushSection("💳 طرق الدفع:", [data.payment]);
+  }
+
+  if (data.returnPolicy) {
+    pushSection("🔄 سياسة الاسترجاع:", [data.returnPolicy]);
+  }
+
+  if (data.aboutUs) {
+    pushSection("ℹ️ عن المتجر:", [data.aboutUs]);
+  }
+
+  if (data.faq) {
+    pushSection(`❓ ${data.faq.question || "سؤال متكرر"}:`, [data.faq.answer]);
+  }
+
+  const text = parts.join("\n").trim();
+  return text || (locale === "en"
+    ? "Sorry, I don't have that information right now. Please contact support directly."
+    : "للأسف ما عندي المعلومة حالياً. تواصل مع الدعم مباشرة.");
+}
+
 function isSecretProbe(text = "") {
   const lower = text.toLowerCase();
   return [
@@ -95,6 +163,9 @@ function detectLocalIntent(text = "") {
   const normalized = text.trim().toLowerCase();
   if (!normalized) {
     return "other";
+  }
+  if (/^[a-z0-9_-]{3,}$/i.test(normalized) && /\d/.test(normalized)) {
+    return "order_status";
   }
   if (
     normalized.includes("تتبع") ||
@@ -137,6 +208,40 @@ function detectLocalIntent(text = "") {
     normalized.includes("suggest")
   ) {
     return "product_discovery";
+  }
+  if (
+    normalized.includes("موقع") ||
+    normalized.includes("عنوان") ||
+    normalized.includes("وين") ||
+    normalized.includes("فين") ||
+    normalized.includes("مكان") ||
+    normalized.includes("ساعات") ||
+    normalized.includes("وقت العمل") ||
+    normalized.includes("مواعيد") ||
+    normalized.includes("مفتوح") ||
+    normalized.includes("يغلق") ||
+    normalized.includes("تواصل") ||
+    normalized.includes("هاتف") ||
+    normalized.includes("انستقرام") ||
+    normalized.includes("فيسبوك") ||
+    normalized.includes("واتس") ||
+    normalized.includes("بريد") ||
+    normalized.includes("ايميل") ||
+    normalized.includes("دفع") ||
+    normalized.includes("فيزا") ||
+    normalized.includes("كاش") ||
+    normalized.includes("نقد") ||
+    normalized.includes("من نحن") ||
+    normalized.includes("عن المتجر") ||
+    normalized.includes("نبذة") ||
+    normalized.includes("location") ||
+    normalized.includes("hours") ||
+    normalized.includes("address") ||
+    normalized.includes("contact") ||
+    normalized.includes("payment") ||
+    normalized.includes("about")
+  ) {
+    return "business_info";
   }
   if (
     normalized.includes("دعم") ||
@@ -219,18 +324,55 @@ function extractOrderNumber(text = "") {
   return withDigit ? withDigit.trim() : null;
 }
 
+function mapOrderStatusToArabic(status) {
+  const normalized = `${status || ""}`.trim().toLowerCase();
+  const map = {
+    pending: "قيد المراجعة",
+    processing: "قيد التجهيز",
+    confirmed: "تم التأكيد",
+    shipped: "تم الشحن",
+    in_transit: "في الطريق",
+    out_for_delivery: "خرج للتسليم",
+    delivered: "تم التسليم",
+    cancelled: "ملغي",
+    canceled: "ملغي",
+    returned: "مرتجع",
+    failed: "تعذر التنفيذ",
+    unpaid: "غير مدفوع",
+    paid: "مدفوع",
+  };
+  return map[normalized] || (status ? `${status}` : "قيد المعالجة");
+}
+
 function buildOrderStatusText(record, locale) {
   if (!record) {
-    return locale === "en"
-      ? "I could not find an order with this number. Please check and try again."
-      : "ما لقيت طلب بهذا الرقم. تأكد من الرقم وأعد المحاولة.";
+    return "ما لقيت طلب بهذا الرقم. تأكد من الرقم وأعد المحاولة.";
   }
 
-  const status = record.status || "processing";
-  if (locale === "en") {
-    return `Order #${record.orderNumber}: ${status}${record.trackingNumber ? `, tracking: ${record.trackingNumber}` : ""}${record.carrier ? `, carrier: ${record.carrier}` : ""}${record.eta ? `, ETA: ${record.eta}` : ""}.`;
+  const statusLabel = mapOrderStatusToArabic(record.status || "processing");
+  const lines = [
+    `حالة الطلب ${record.orderNumber}:`,
+    `- الحالة الحالية: ${statusLabel}`,
+  ];
+
+  if (record.trackingNumber) {
+    lines.push(`- رقم التتبع: ${record.trackingNumber}`);
   }
-  return `حالة الطلب ${record.orderNumber}: ${status}${record.trackingNumber ? `، رقم التتبع: ${record.trackingNumber}` : ""}${record.carrier ? `، شركة الشحن: ${record.carrier}` : ""}${record.eta ? `، موعد الوصول المتوقع: ${record.eta}` : ""}.`;
+
+  if (record.carrier) {
+    lines.push(`- شركة الشحن: ${record.carrier}`);
+  }
+
+  if (record.eta) {
+    lines.push(`- موعد الوصول المتوقع: ${record.eta}`);
+  }
+
+  return lines.join("\n");
+}
+
+function buildOrderDetailsUrl(orderNumber) {
+  if (!orderNumber) return null;
+  return `/orders/${encodeURIComponent(`${orderNumber}`)}`;
 }
 
 async function tryLocalIntentResponse(payload) {
@@ -244,8 +386,8 @@ async function tryLocalIntentResponse(payload) {
     if (!orderNumber) {
       return {
         assistantText: payload.locale === "en"
-          ? "Please send your order number to check its status."
-          : "اكتب رقم الطلب فقط وسأعرض لك حالته مباشرة.",
+          ? "Please send your order number to check its status (example: Track order GL-202603-123)."
+          : "اكتب رقم الطلب للتتبع (مثال: تتبع الطلب GL-202603-123).",
         quickReplies: buildQuickReplies(payload.locale),
         productCards: [],
         requiresVerification: false,
@@ -264,6 +406,7 @@ async function tryLocalIntentResponse(payload) {
       assistantText: buildOrderStatusText(record, payload.locale),
       quickReplies: buildQuickReplies(payload.locale),
       productCards: [],
+      orderDetailsUrl: buildOrderDetailsUrl(record?.orderNumber),
       requiresVerification: false,
       citations: [],
       intent,
@@ -319,6 +462,26 @@ async function tryLocalIntentResponse(payload) {
       intent,
       toolCalls: toolResults.map((r) => ({ name: r.name, args: r.args })),
     };
+  }
+
+  if (intent === "business_info") {
+    const toolResults = await executeToolRequests(
+      [{ name: "business_info", args: { topic: payload.message } }],
+      {}
+    );
+    const data = toolResults?.[0]?.result?.data;
+    if (data) {
+      const text = formatBusinessInfoResponse(data, payload.locale);
+      return {
+        assistantText: text,
+        quickReplies: buildQuickReplies(payload.locale),
+        productCards: [],
+        requiresVerification: false,
+        citations: [],
+        intent,
+        toolCalls: toolResults.map((r) => ({ name: r.name, args: r.args })),
+      };
+    }
   }
 
   if (intent === "support") {
@@ -384,7 +547,9 @@ const chatSendMessage = makeCallable(async (request) => {
         assistantText: localResponse.assistantText,
         quickReplies: localResponse.quickReplies,
         productCards: localResponse.productCards,
+        orderDetailsUrl: localResponse.orderDetailsUrl || null,
         requiresVerification: localResponse.requiresVerification,
+        verificationOrderNumber: localResponse.verificationOrderNumber || null,
         citations: localResponse.citations,
       });
     }
@@ -462,6 +627,15 @@ const chatSendMessage = makeCallable(async (request) => {
       args: parseProductSearchArgs(payload.message, payload.locale),
     });
   }
+  if (
+    plan.intent === "business_info" &&
+    !plannedToolRequests.some((r) => r?.name === "business_info")
+  ) {
+    plannedToolRequests.push({
+      name: "business_info",
+      args: { topic: payload.message },
+    });
+  }
 
   if (plannedToolRequests.length) {
     toolResults = await executeToolRequests(plannedToolRequests, {
@@ -470,8 +644,12 @@ const chatSendMessage = makeCallable(async (request) => {
     });
   }
 
-  const extractedOrderNumber = extractOrderNumber(payload.message);
   const orderStatusRecord = toolResults.find((entry) => entry.name === "order_status")?.result?.record || null;
+  const extractedOrderNumber = extractOrderNumber(payload.message);
+  const orderDetailsUrl = plan.intent === "order_status"
+    ? buildOrderDetailsUrl(orderStatusRecord?.orderNumber || extractedOrderNumber)
+    : null;
+  const businessInfoData = toolResults.find((entry) => entry.name === "business_info")?.result?.data || null;
   const assistantText = plan.intent === "order_status"
     ? (
       extractedOrderNumber
@@ -488,13 +666,16 @@ const chatSendMessage = makeCallable(async (request) => {
             ? "No exact matches found. Share a category or budget and I will filter immediately."
             : "ما لقيت نتائج دقيقة الآن. اكتب الفئة أو الميزانية وسأفلتر لك مباشرة.")
       )
-    : (`${plan.answerDraft || ""}`.trim() || buildFallback(payload.locale).assistantText);
+      : plan.intent === "business_info" && businessInfoData
+        ? formatBusinessInfoResponse(businessInfoData, payload.locale)
+        : (`${plan.answerDraft || ""}`.trim() || buildFallback(payload.locale).assistantText);
   const productCards = buildProductCards(toolResults, plan.language || payload.locale);
   const citations = buildCitations(toolResults);
   const response = {
     assistantText,
     quickReplies: buildQuickReplies(plan.language || payload.locale),
     productCards,
+    orderDetailsUrl,
     requiresVerification: false,
     citations,
   };

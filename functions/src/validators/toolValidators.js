@@ -61,6 +61,9 @@ function validateToolArgs(toolName, args = {}) {
         summary: `${args.summary}`.trim(),
       };
 
+    case "business_info":
+      return { topic: String(args.topic || "all") };
+
     default:
       throw new AppError("validation/disallowed-tool", `Tool ${toolName} is not allowlisted.`);
   }

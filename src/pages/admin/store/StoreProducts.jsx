@@ -157,6 +157,9 @@ const StoreProducts = () => {
                                 {/* Product Info */}
                                 <div className="card-body p-2">
                                     <h6 className="mb-1 product-name">{product.name}</h6>
+                                    {product.categoryName && (
+                                        <div className="small text-muted mb-1">{product.categoryName}</div>
+                                    )}
                                     <div className="fw-bold text-gold">
                                         {formatCurrency(fromCents(product.price), currency)}
                                     </div>

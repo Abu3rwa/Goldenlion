@@ -86,7 +86,7 @@ const LoginPage = () => {
           <div className="text-gold mb-3" style={{ fontSize: '4rem' }}>
             <GiLion />
           </div>
-          <h2 className="card-title fw-bold text-dark mb-1">الأسد الذهبي</h2>
+          <h2 className="card-title fw-bold text-dark mb-1">مجمـوعة الأسـد</h2>
           <p className="text-muted mb-4">نظام إدارة المخزون</p>
 
           <form onSubmit={handleSubmit} className="text-end">

@@ -24,6 +24,7 @@ const TOOL_NAMES = {
   PRODUCT_BY_ID: "product_by_id",
   ORDER_STATUS: "order_status",
   CREATE_TICKET: "create_ticket",
+  BUSINESS_INFO: "business_info",
 };
 
 module.exports = {

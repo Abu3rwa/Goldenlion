@@ -390,7 +390,7 @@ const StockOutPage = () => {
                 <PrintWrapper>
                     <Receipt
                         transaction={lastTransaction}
-                        company={{ companyName: companyName || 'الأسد الذهبي', companyNameEn, currency, address, phone, terms }}
+                        company={{ companyName: companyName || 'مجمـوعة الأسـد', companyNameEn, currency, address, phone, terms }}
                     />
                 </PrintWrapper>
             )}

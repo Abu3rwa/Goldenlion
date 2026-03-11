@@ -431,7 +431,7 @@ const StockInPage = () => {
                 <PrintWrapper>
                     <Receipt
                         transaction={lastTransaction}
-                        company={{ companyName: companyName || 'الأسد الذهبي', companyNameEn, currency, address, phone, terms }}
+                        company={{ companyName: companyName || 'مجمـوعة الأسـد', companyNameEn, currency, address, phone, terms }}
                     />
                 </PrintWrapper>
             )}
@@ -442,7 +442,7 @@ const StockInPage = () => {
                     <div id="pdf-receipt-stock-in" style={{ width: '210mm', backgroundColor: 'white' }}>
                         <Receipt
                             transaction={lastTransaction}
-                            company={{ companyName: companyName || 'الأسد الذهبي', currency, address, phone, terms }}
+                            company={{ companyName: companyName || 'مجمـوعة الأسـد', currency, address, phone, terms }}
                         />
                     </div>
                 </div>

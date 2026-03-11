@@ -74,7 +74,7 @@ const CompanySettingsForm = () => {
                 className="form-control"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="مثال: الأسد الذهبي"
+                placeholder="مثال: مجمـوعة الأسـد"
               />
             </div>
 

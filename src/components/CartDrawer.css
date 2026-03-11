@@ -30,7 +30,8 @@
     right: -450px;
     width: 100%;
     max-width: 420px;
-    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
     background: white;
     z-index: 1001;
     display: flex;
@@ -106,6 +107,8 @@
 .cart-content {
     flex: 1;
     overflow-y: auto;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
     padding: 0;
 }
 
@@ -341,6 +344,7 @@
 /* Footer */
 .cart-footer {
     padding: 1.25rem;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
     background: #f8f9fa;
     border-top: 1px solid #e0e0e0;
     flex-shrink: 0;

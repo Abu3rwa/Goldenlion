@@ -3,27 +3,24 @@ import {
     collection,
     getDocs,
     getDoc,
-    addDoc,
     updateDoc,
     doc,
     query,
     orderBy,
     where,
     serverTimestamp,
-    limit
 } from 'firebase/firestore';
-import { COLLECTIONS, ORDER_STATUS, PAYMENT_STATUS } from '../utils/constants';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { COLLECTIONS, ORDER_STATUS } from '../utils/constants';
 import { serializeFirestoreData } from '../utils/serialization';
+import { normalizeColorKey } from '../utils/cartUtils';
+import { app } from './firebaseConfig';
 
-/**
- * Generate unique order number
- */
-const generateOrderNumber = () => {
-    const date = new Date();
-    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-    return `GL-${dateStr}-${random}`;
-};
+const functions = getFunctions(app, 'us-central1');
+const createPublicCheckoutOrderFn = httpsCallable(functions, 'createPublicCheckoutOrder');
+const getPublicOrderTrackingFn = httpsCallable(functions, 'getPublicOrderTracking');
+const createPosSaleFn = httpsCallable(functions, 'createPosSale');
+const updateManagedOrderStatusFn = httpsCallable(functions, 'updateManagedOrderStatus');
 
 /**
  * Service for managing public store orders
@@ -79,102 +76,78 @@ export const publicOrderService = {
      * Create new order (public - no auth required)
      */
     createOrder: async (orderData) => {
-        const orderNumber = generateOrderNumber();
-
-        // Prepare items with color info and cost
-        const orderItems = orderData.items.map(item => ({
-            productId: item.productId,
-            productName: item.productName,
-            price: item.price,
-            costPrice: item.costPrice || 0,
-            quantity: item.quantity,
-            subtotal: item.price * item.quantity,
-            selectedColor: item.selectedColor || null
-        }));
-
-        // Calculate profit
-        const totalRevenue = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
-        const totalCost = orderItems.reduce((sum, item) => sum + (item.costPrice * item.quantity), 0);
-        const estimatedProfit = totalRevenue - totalCost;
-
-        const newOrder = {
-            orderNumber,
-            customer: {
-                name: orderData.customerName,
-                phone: orderData.customerPhone,
-                address: orderData.customerAddress,
-                email: orderData.customerEmail || ''
-            },
-            cityId: orderData.cityId,
-            cityName: orderData.cityName,
-            deliveryCharge: orderData.deliveryCharge,
-            items: orderItems,
-            subtotal: orderData.subtotal,
-            total: orderData.total,
-            totalCost: totalCost,
-            estimatedProfit: estimatedProfit,
-            status: ORDER_STATUS.PENDING,
-            paymentMethod: 'cash',
-            paymentStatus: PAYMENT_STATUS.UNPAID,
-            customerNotes: orderData.customerNotes || '',
-            adminNotes: '',
-            createdAt: serverTimestamp()
+        const safePayload = {
+            ...orderData,
+            items: Array.isArray(orderData?.items)
+                ? orderData.items.map((item) => ({
+                    ...item,
+                    selectedColor: item?.selectedColor
+                        ? {
+                            ...item.selectedColor,
+                            colorKey: normalizeColorKey(item.selectedColor.colorKey || item.selectedColor.color),
+                        }
+                        : null,
+                }))
+                : [],
         };
 
-        const docRef = await addDoc(collection(db, COLLECTIONS.PUBLIC_ORDERS), newOrder);
-
-        // Deduct stock for each item with color variant
-        // This is done after order creation to ensure order is saved first
-        // In production, consider using transactions for atomicity
-        for (const item of orderItems) {
-            if (item.selectedColor) {
-                try {
-                    // Import dynamically to avoid circular dependency
-                    const { publicProductService } = await import('./publicProductService');
-                    await publicProductService.deductVariantStock(
-                        item.productId,
-                        item.selectedColor.color,
-                        item.quantity
-                    );
-                } catch (err) {
-                    console.error('Failed to deduct stock:', err);
-                    // Continue - order is already placed
-                }
-            }
+        const result = await createPublicCheckoutOrderFn(safePayload);
+        if (!result?.data?.ok || !result?.data?.order) {
+            throw new Error('فشل إنشاء الطلب. حاول مرة أخرى.');
         }
 
-        return serializeFirestoreData({
-            id: docRef.id,
-            orderNumber,
-            ...newOrder
-        });
+        return serializeFirestoreData(result.data.order);
+    },
+
+    getPublicOrderTracking: async (orderNumber) => {
+        const normalizedOrderNumber = `${orderNumber || ''}`.trim();
+        const result = await getPublicOrderTrackingFn({ orderNumber: normalizedOrderNumber });
+        const payload = result?.data || {};
+
+        if (!payload.ok) {
+            throw new Error('تعذر تحميل تتبع الطلب.');
+        }
+
+        if (!payload.found || !payload.order) {
+            return null;
+        }
+
+        return serializeFirestoreData(payload.order);
     },
 
     /**
      * Update order status
      */
     updateOrderStatus: async (id, status) => {
-        const orderRef = doc(db, COLLECTIONS.PUBLIC_ORDERS, id);
+        const result = await updateManagedOrderStatusFn({ orderId: id, status });
+        if (!result?.data?.ok || !result?.data?.order) {
+            throw new Error('تعذر تحديث حالة الطلب.');
+        }
+        return serializeFirestoreData(result.data.order);
+    },
 
-        const updateData = {
-            status,
-            updatedAt: serverTimestamp()
+    createPosSale: async (saleData) => {
+        const safePayload = {
+            ...saleData,
+            items: Array.isArray(saleData?.items)
+                ? saleData.items.map((item) => ({
+                    ...item,
+                    selectedColor: item?.selectedColor
+                        ? {
+                            ...item.selectedColor,
+                            colorKey: normalizeColorKey(item.selectedColor.colorKey || item.selectedColor.color),
+                        }
+                        : null,
+                }))
+                : [],
         };
 
-        // Add timestamp for specific status changes
-        if (status === ORDER_STATUS.CONFIRMED) {
-            updateData.confirmedAt = serverTimestamp();
-        } else if (status === ORDER_STATUS.SHIPPED) {
-            updateData.shippedAt = serverTimestamp();
-        } else if (status === ORDER_STATUS.DELIVERED) {
-            updateData.deliveredAt = serverTimestamp();
-            updateData.paymentStatus = PAYMENT_STATUS.PAID; // Cash on delivery = paid when delivered
+        const result = await createPosSaleFn(safePayload);
+        if (!result?.data?.ok || !result?.data?.order) {
+            throw new Error('فشل إتمام عملية البيع من نقطة البيع.');
         }
 
-        await updateDoc(orderRef, updateData);
-
-        const updatedDoc = await getDoc(orderRef);
-        return serializeFirestoreData({ id: updatedDoc.id, ...updatedDoc.data() });
+        return serializeFirestoreData(result.data.order);
     },
 
     /**

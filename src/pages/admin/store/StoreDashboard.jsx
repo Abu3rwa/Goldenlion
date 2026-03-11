@@ -16,7 +16,9 @@ import {
     MdInventory,
     MdLocationCity,
     MdTrendingUp,
-    MdAccessTime
+    MdAccessTime,
+    MdPointOfSale,
+    MdAnalytics
 } from 'react-icons/md';
 import './StoreDashboard.css';
 
@@ -31,6 +33,8 @@ const StoreDashboard = () => {
     // Get roles array from profile
     const roles = userProfile?.roles || [];
     const canManage = userService.canPerformAction(roles, 'VIEW_STORE_DASHBOARD');
+    const canUsePos = userService.canPerformAction(roles, 'USE_POS');
+    const canViewAnalytics = userService.canPerformAction(roles, 'VIEW_ADVANCED_ANALYTICS');
 
     useEffect(() => {
         if (canManage) {
@@ -52,6 +56,50 @@ const StoreDashboard = () => {
     const inStockProducts = products.filter(p => p.inStock).length;
     const featuredProducts = products.filter(p => p.featured).length;
     const activeCities = cities.filter(c => c.isActive).length;
+    const actionCards = [
+        {
+            key: 'products',
+            to: '/admin/store/products',
+            icon: <MdInventory className="fs-1 text-gold mb-2" />,
+            title: 'منتجات المتجر',
+            description: `${inStockProducts} متوفر من ${products.length} منتج${featuredProducts > 0 ? ` • ${featuredProducts} مميز` : ''}`,
+        },
+        {
+            key: 'orders',
+            to: '/admin/store/orders',
+            icon: <MdShoppingCart className="fs-1 text-gold mb-2" />,
+            title: 'إدارة الطلبات',
+            description: `${stats?.total || 0} طلب إجمالي`,
+            badge: stats?.pending > 0 ? `${stats.pending} جديد` : '',
+        },
+        {
+            key: 'cities',
+            to: '/admin/store/cities',
+            icon: <MdLocationCity className="fs-1 text-gold mb-2" />,
+            title: 'مدن التوصيل',
+            description: `${activeCities} مدينة مفعلة من ${cities.length}`,
+        },
+    ];
+
+    if (canUsePos) {
+        actionCards.push({
+            key: 'pos',
+            to: '/admin/pos',
+            icon: <MdPointOfSale className="fs-1 text-gold mb-2" />,
+            title: 'نقطة البيع',
+            description: 'بيع مباشر سريع باستخدام كود المنتج مع إيصال فوري.',
+        });
+    }
+
+    if (canViewAnalytics) {
+        actionCards.push({
+            key: 'analytics',
+            to: '/admin/analytics',
+            icon: <MdAnalytics className="fs-1 text-gold mb-2" />,
+            title: 'التحليلات المتقدمة',
+            description: 'أفضل المنتجات، المدن، الأوقات، وتوقعات إعادة الطلب.',
+        });
+    }
 
     return (
         <div className="store-dashboard">
@@ -176,47 +224,22 @@ const StoreDashboard = () => {
 
             {/* Quick Actions */}
             <div className="row g-3 mb-4">
-                <div className="col-md-4">
-                    <Link to="/admin/store/products" className="text-decoration-none">
-                        <div className="card border-0 shadow-sm h-100 action-card">
-                            <div className="card-body text-center py-4">
-                                <MdInventory className="fs-1 text-gold mb-2" />
-                                <h5 className="mb-1">منتجات المتجر</h5>
-                                <p className="text-muted small mb-0">
-                                    {inStockProducts} متوفر من {products.length} منتج
-                                    {featuredProducts > 0 && ` • ${featuredProducts} مميز`}
-                                </p>
+                {actionCards.map((card) => (
+                    <div key={card.key} className="col-md-6 col-xl-4">
+                        <Link to={card.to} className="text-decoration-none">
+                            <div className="card border-0 shadow-sm h-100 action-card">
+                                <div className="card-body text-center py-4">
+                                    {card.icon}
+                                    <h5 className="mb-1">{card.title}</h5>
+                                    <p className="text-muted small mb-0">
+                                        {card.description}
+                                        {card.badge ? <span className="badge bg-warning ms-2">{card.badge}</span> : null}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-                    </Link>
-                </div>
-                <div className="col-md-4">
-                    <Link to="/admin/store/orders" className="text-decoration-none">
-                        <div className="card border-0 shadow-sm h-100 action-card">
-                            <div className="card-body text-center py-4">
-                                <MdShoppingCart className="fs-1 text-gold mb-2" />
-                                <h5 className="mb-1">إدارة الطلبات</h5>
-                                <p className="text-muted small mb-0">
-                                    {stats?.total || 0} طلب إجمالي
-                                    {stats?.pending > 0 && <span className="badge bg-warning ms-2">{stats.pending} جديد</span>}
-                                </p>
-                            </div>
-                        </div>
-                    </Link>
-                </div>
-                <div className="col-md-4">
-                    <Link to="/admin/store/cities" className="text-decoration-none">
-                        <div className="card border-0 shadow-sm h-100 action-card">
-                            <div className="card-body text-center py-4">
-                                <MdLocationCity className="fs-1 text-gold mb-2" />
-                                <h5 className="mb-1">مدن التوصيل</h5>
-                                <p className="text-muted small mb-0">
-                                    {activeCities} مدينة مفعلة من {cities.length}
-                                </p>
-                            </div>
-                        </div>
-                    </Link>
-                </div>
+                        </Link>
+                    </div>
+                ))}
             </div>
 
             {/* Recent Orders Preview */}

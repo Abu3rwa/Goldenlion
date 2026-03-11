@@ -1,37 +1,59 @@
-// Mock implementation for company settings service
-// In a real application, this would interact with a backend or a database.
+import { db } from './firebaseConfig';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
-const MOCK_DELAY = 500; // milliseconds
+const DEFAULT_COMPANY_SETTINGS = {
+  companyName: '',
+  companyNameEn: '',
+  currency: 'د.ل',
+  language: 'ar',
+  address: '',
+  phone: '',
+  terms: '',
+};
+
+const DEFAULT_CHATBOT_INFO = {
+  location: { address: '', city: '', googleMapsUrl: '' },
+  workingHours: { weekdays: '', friday: '', saturday: '', notes: '' },
+  contact: { phone: '', whatsapp: '', email: '', instagram: '', facebook: '' },
+  aboutUs: '',
+  delivery: '',
+  payment: '',
+  returnPolicy: '',
+  customFaqs: [],
+};
 
 export const companyService = {
-  // Fetch company settings
+  // ─── Company Settings (invoice/general) ───
   getCompanySettings: async () => {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        // In a real app, you would fetch this from a persistent store.
-        // For now, we return some mock data or previously saved settings.
-        const settings = JSON.parse(localStorage.getItem('companySettings')) || {
-          companyName: 'Golden Lion',
-          currency: 'د.ل',
-          language: 'ar',
-          address: 'Tripoli, Libya',
-          phone: '091-0000000',
-          terms: 'Goods sold are not returnable after 14 days.'
-        };
-        resolve(settings);
-      }, MOCK_DELAY);
-    });
+    try {
+      const snap = await getDoc(doc(db, 'settings', 'company'));
+      return snap.exists() ? { ...DEFAULT_COMPANY_SETTINGS, ...snap.data() } : DEFAULT_COMPANY_SETTINGS;
+    } catch (error) {
+      console.error('Failed to load company settings:', error);
+      return DEFAULT_COMPANY_SETTINGS;
+    }
   },
 
-  // Save company settings
   saveCompanySettings: async (settingsData) => {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        // In a real app, you would save this to a database.
-        // For this mock, we'll use localStorage.
-        localStorage.setItem('companySettings', JSON.stringify(settingsData));
-        resolve(settingsData);
-      }, MOCK_DELAY);
-    });
+    const ref = doc(db, 'settings', 'company');
+    await setDoc(ref, { ...settingsData, updatedAt: serverTimestamp() }, { merge: true });
+    return settingsData;
+  },
+
+  // ─── Chatbot Business Info ───
+  getChatbotInfo: async () => {
+    try {
+      const snap = await getDoc(doc(db, 'settings', 'chatbotInfo'));
+      return snap.exists() ? { ...DEFAULT_CHATBOT_INFO, ...snap.data() } : DEFAULT_CHATBOT_INFO;
+    } catch (error) {
+      console.error('Failed to load chatbot info:', error);
+      return DEFAULT_CHATBOT_INFO;
+    }
+  },
+
+  saveChatbotInfo: async (data) => {
+    const ref = doc(db, 'settings', 'chatbotInfo');
+    await setDoc(ref, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+    return data;
   },
 };

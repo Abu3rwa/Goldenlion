@@ -29,6 +29,7 @@ const ProductForm = () => {
   const [costPrice, setCostPrice] = useState('');
   const [supplierId, setSupplierId] = useState('');
   const [addRequestStatus, setAddRequestStatus] = useState('idle');
+  const [saved, setSaved] = useState('');
 
   useEffect(() => {
     dispatch(fetchSuppliers());
@@ -55,7 +56,8 @@ const ProductForm = () => {
     }
   }, [productToEdit, categories]);
 
-  const canSave = [name, quantity, price, costPrice].every(Boolean) && addRequestStatus === 'idle';
+const valuesOfForm = [name, quantity, price, costPrice, supplierId, categoryId];
+  const canSave = valuesOfForm.every(Boolean) && addRequestStatus === 'idle';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -78,7 +80,13 @@ const ProductForm = () => {
             ...productData
           })).unwrap();
         } else {
+          if(price<costPrice){
+            alert('سعر البيع لا يمكن أن يكون أقل من سعر التكلفة!');
+            setAddRequestStatus('idle');
+            return;
+          }
           await dispatch(addNewProduct(productData)).unwrap();
+          setSaved('تم إضافة المنتج بنجاح!');
         }
         setName('');
         setCategoryId('');
@@ -86,8 +94,8 @@ const ProductForm = () => {
         setPrice('');
         setCostPrice('');
         setSupplierId('');
-        navigate('/');
-      } catch (err) {
+          setTimeout(() => setSaved(''), 2000);
+       } catch (err) {
         console.error('Failed to save the product: ', err);
       } finally {
         setAddRequestStatus('idle');
@@ -98,7 +106,7 @@ const ProductForm = () => {
   return (
     <form className="product-form" onSubmit={handleSubmit}>
       <h2>{id ? 'تعديل المنتج' : 'إضافة منتج'}</h2>
-      <div className="row g-3 mb-3">
+      <div className="row g-3 mb-1">
         <div className="col-md-4">
           <label>كود المنتج</label>
           <input
@@ -116,9 +124,9 @@ const ProductForm = () => {
         </div>
       </div>
 
-      <div>
-        <label>التصنيف</label>
-        <div className="d-flex gap-2">
+      <div className="category-supplier-row"> 
+<div>
+         <div className="d-flex gap-2 m-2">
           <select
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
@@ -134,9 +142,8 @@ const ProductForm = () => {
         </div>
       </div>
 
-      <div>
-        <label>المورد</label>
-        <select
+      <div >
+         <select
           value={supplierId}
           onChange={(e) => setSupplierId(e.target.value)}
           className="supplier-select"
@@ -148,19 +155,23 @@ const ProductForm = () => {
           ))}
         </select>
       </div>
-      <div>
-        <label>الكمية</label>
 
-        <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} disabled={!canManageInventory} />
+      </div>
+      <div className="mb-3 money-row">
+
+         <div>
+ 
+        <input placeholder='الكمية' type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} disabled={!canManageInventory} />
       </div>
       <div>
-        <label>سعر التكلفة (رأس المال)</label>
-        <input type="number" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} disabled={!canManageInventory} />
+         <input placeholder=' سعر التكلفة (رأس المال)' type="number" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} disabled={!canManageInventory} />
       </div>
       <div>
-        <label>سعر البيع</label>
-        <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} disabled={!canManageInventory} />
+         <input placeholder='سعر البيع' type="number" value={price} onChange={(e) => setPrice(e.target.value)} disabled={!canManageInventory} />
       </div>
+      
+      </div>
+     <h3 className='saved-message'>{saved}</h3>
       {canManageInventory && (
         <button type="submit" disabled={!canSave}>
           {addRequestStatus === 'pending' ? 'جاري الحفظ...' : 'حفظ'}

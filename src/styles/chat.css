@@ -71,11 +71,28 @@
 }
 
 .chat-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 10px 14px;
   font-weight: 700;
   color: var(--chat-dark);
   border-bottom: 1px solid var(--chat-border);
   background: #fff;
+}
+
+.chat-ghost-btn {
+  border: 1px solid #d8c78a;
+  border-radius: 8px;
+  background: #fffdf6;
+  color: var(--chat-dark);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 9px;
+}
+
+.chat-ghost-btn:disabled {
+  opacity: 0.65;
 }
 
 .chat-message-list {
@@ -101,6 +118,40 @@
   background: var(--chat-assistant-bubble);
   color: var(--chat-text);
   border: 1px solid var(--chat-border);
+}
+
+.chat-structured-text {
+  display: grid;
+  gap: 6px;
+}
+
+.chat-block-title,
+.chat-block-paragraph {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.chat-block-title {
+  font-weight: 700;
+  color: #2c2207;
+}
+
+.chat-block-list {
+  margin: 0;
+  padding: 0 1.1rem 0 0;
+  display: grid;
+  gap: 4px;
+}
+
+.chat-block-list li {
+  line-height: 1.6;
+}
+
+.chat-inline-link {
+  color: #0d63c8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-word;
 }
 
 .chat-message.user .chat-bubble {
@@ -129,6 +180,29 @@
   grid-template-columns: 1fr;
   gap: 8px;
   margin-top: 8px;
+}
+
+.chat-message-actions {
+  margin-top: 8px;
+}
+
+.chat-order-details-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #d8c78a;
+  background: #fffdf6;
+  color: var(--chat-dark);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.chat-order-details-btn:hover {
+  background: linear-gradient(135deg, var(--chat-gold), var(--chat-gold-dark));
+  color: var(--chat-dark);
 }
 
 .chat-product-card {
@@ -195,6 +269,21 @@
   padding: 10px;
   display: grid;
   gap: 6px;
+  background: #fff;
+}
+
+.chat-block-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.chat-block-hint {
+  margin: 0;
+  font-size: 12px;
+  color: #5a5133;
+  line-height: 1.5;
 }
 
 .chat-block input,

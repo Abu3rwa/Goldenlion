@@ -1,23 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, Link } from 'react-router-dom';
-import { selectCartItems, selectCartSubtotal, clearCart } from '../store/cartSlice';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+    clearCart,
+    revalidateCartItems,
+    selectCartInventoryNotice,
+    selectCartItems,
+    selectCartSubtotal,
+} from '../store/cartSlice';
 import { fetchActiveCities } from '../store/deliveryCitiesSlice';
 import { createPublicOrder } from '../store/publicOrdersSlice';
 import { formatCurrency } from '../utils/currency';
-import { fromCents, toCents } from '../utils/decimalUtils';
+import { fromCents } from '../utils/decimalUtils';
+import {
+    buildCheckoutOrderPayload,
+    normalizeCouponCode,
+    validateCheckoutForm,
+} from '../utils/checkout';
 import {
     MdPerson,
     MdPhone,
     MdLocationOn,
     MdReceipt,
     MdArrowBack,
-    MdCheckCircle,
     MdLocalShipping,
     MdShoppingBag,
-    MdRefresh
+    MdRefresh,
+    MdDiscount
 } from 'react-icons/md';
-import { FaWhatsapp } from 'react-icons/fa';
 import './CheckoutPage.css';
 
 const CheckoutPage = () => {
@@ -27,8 +37,9 @@ const CheckoutPage = () => {
     // Selectors
     const cartItems = useSelector(selectCartItems);
     const subtotal = useSelector(selectCartSubtotal);
+    const cartInventoryNotice = useSelector(selectCartInventoryNotice);
     const { cities, status: citiesStatus } = useSelector((state) => state.deliveryCities);
-    const { currency, phone: companyPhone } = useSelector((state) => state.company);
+    const { currency } = useSelector((state) => state.company);
 
     // Form State
     const [name, setName] = useState('');
@@ -36,15 +47,16 @@ const CheckoutPage = () => {
     const [cityId, setCityId] = useState('');
     const [address, setAddress] = useState('');
     const [notes, setNotes] = useState('');
+    const [couponCode, setCouponCode] = useState('');
     const [errors, setErrors] = useState({});
+    const [generalError, setGeneralError] = useState('');
 
     // Submission State
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [orderSuccess, setOrderSuccess] = useState(null);
-
     // Load cities on mount
     useEffect(() => {
         dispatch(fetchActiveCities());
+        dispatch(revalidateCartItems());
     }, [dispatch]);
 
     // Derived State
@@ -53,69 +65,75 @@ const CheckoutPage = () => {
     const total = subtotal + deliveryCharge;
 
     const validateForm = () => {
-        const newErrors = {};
-        if (!name.trim()) newErrors.name = 'الاسم مطلوب';
-        if (!phone.trim()) newErrors.phone = 'رقم الهاتف مطلوب';
-        else if (!/^09\d{8}$/.test(phone.replace(/\D/g, ''))) newErrors.phone = 'الرقم يجب أن يبدأ بـ 09 ويتكون من 10 أرقام';
-        if (!cityId) newErrors.cityId = 'المدينة مطلوبة';
-        if (!address.trim()) newErrors.address = 'العنوان مطلوب';
+        const validationErrors = validateCheckoutForm({ name, phone, cityId, address });
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        const normalizedCoupon = normalizeCouponCode(couponCode);
+        if (normalizedCoupon && normalizedCoupon.length < 3) {
+            validationErrors.couponCode = 'الحد الأدنى لطول الكوبون هو 3 أحرف';
+        }
+
+        setErrors(validationErrors);
+        return Object.keys(validationErrors).length === 0;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const revalidateAction = await dispatch(revalidateCartItems());
+        const inventoryResult = revalidateAction.payload || {};
+        if (inventoryResult.changed) {
+            setGeneralError(inventoryResult.message || 'تم تحديث السلة حسب المخزون الحالي. راجع الكميات ثم أعد المحاولة.');
+            return;
+        }
+
         if (!validateForm()) return;
 
         setIsSubmitting(true);
+        setGeneralError('');
 
-        const orderData = {
-            customerName: name,
-            customerPhone: phone,
-            customerAddress: address,
-            customerNotes: notes,
-            cityId: selectedCity.id,
-            cityName: selectedCity.name,
+        const orderData = buildCheckoutOrderPayload({
+            name,
+            phone,
+            address,
+            notes,
+            selectedCity,
             deliveryCharge,
             subtotal,
             total,
-            items: cartItems
-        };
+            cartItems,
+            couponCode,
+        });
 
         try {
             const resultAction = await dispatch(createPublicOrder(orderData));
             if (createPublicOrder.fulfilled.match(resultAction)) {
                 const newOrder = resultAction.payload;
-                setOrderSuccess(newOrder);
                 dispatch(clearCart());
-                window.scrollTo(0, 0);
+                navigate(`/orders/${encodeURIComponent(newOrder.orderNumber)}`, {
+                    replace: true,
+                    state: {
+                        order: newOrder,
+                        showSuccess: true,
+                    },
+                });
             } else {
-                alert('حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.');
+                const errorCode = resultAction?.error?.code || '';
+                if (errorCode.includes('failed-precondition')) {
+                    setGeneralError(resultAction?.error?.message || 'فشل إتمام الطلب بسبب تغير المخزون.');
+                } else {
+                    setGeneralError('حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.');
+                }
             }
         } catch (error) {
             console.error('Checkout error:', error);
-            alert('حدث خطأ غير متوقع.');
+            setGeneralError('حدث خطأ غير متوقع أثناء إنشاء الطلب.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const handleWhatsAppConfirm = () => {
-        if (!orderSuccess) return;
-
-        const adminPhone = companyPhone || '218910000000';
-        let message = `مرحباً، قمت بطلب جديد من الموقع.\n`;
-        message += `رقم الطلب: ${orderSuccess.orderNumber}\n`;
-        message += `الاسم: ${orderSuccess.customer.name}\n`;
-        message += `الإجمالي: ${formatCurrency(fromCents(orderSuccess.total), currency)}\n\n`;
-        message += `يرجى تأكيد الطلب. شكراً!`;
-
-        window.open(`https://wa.me/${adminPhone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
-    };
-
     // --- RENDER: Empty Cart ---
-    if (cartItems.length === 0 && !orderSuccess) {
+    if (cartItems.length === 0) {
         return (
             <div className="checkout-page">
                 <div className="checkout-container empty-cart-container">
@@ -125,34 +143,6 @@ const CheckoutPage = () => {
                     <Link to="/store" className="btn btn-gold mt-3">
                         <MdArrowBack /> العودة للمتجر
                     </Link>
-                </div>
-            </div>
-        );
-    }
-
-    // --- RENDER: Success ---
-    if (orderSuccess) {
-        return (
-            <div className="checkout-page">
-                <div className="checkout-container success-container">
-                    <MdCheckCircle className="success-icon" />
-                    <h1>تم استلام طلبك بنجاح!</h1>
-                    <p>شكراً لتسوقك معنا. سنقوم بمعالجة طلبك في أقرب وقت.</p>
-
-                    <div className="order-number-box">
-                        <span>رقم الطلب المرجعي</span>
-                        <span className="order-number">{orderSuccess.orderNumber}</span>
-                    </div>
-
-                    <div className="success-actions">
-                        <button onClick={handleWhatsAppConfirm} className="whatsapp-confirm-btn">
-                            <FaWhatsapp size={20} />
-                            تأكيد الطلب عبر واتساب
-                        </button>
-                        <Link to="/store" className="btn btn-outline-primary">
-                            متابعة التسوق
-                        </Link>
-                    </div>
                 </div>
             </div>
         );
@@ -170,6 +160,17 @@ const CheckoutPage = () => {
                 <form onSubmit={handleSubmit} className="checkout-grid">
                     {/* Right Column: Forms */}
                     <div className="checkout-forms">
+                        {generalError && (
+                            <div className="checkout-card">
+                                <div className="text-danger fw-bold">{generalError}</div>
+                            </div>
+                        )}
+                        {cartInventoryNotice && (
+                            <div className="checkout-card">
+                                <div className="text-warning fw-bold">{cartInventoryNotice}</div>
+                            </div>
+                        )}
+
                         {/* Customer Details */}
                         <div className="checkout-card">
                             <div className="card-header-title">
@@ -228,6 +229,7 @@ const CheckoutPage = () => {
                                                 <option value="" disabled>لا توجد مدن متاحة</option>
                                             )}
                                         </select>
+                                        {errors.cityId && <small className="text-danger">{errors.cityId}</small>}
 
                                         {cities.length === 0 && citiesStatus === 'succeeded' && (
                                             <div className="mt-2 text-danger small">
@@ -265,6 +267,27 @@ const CheckoutPage = () => {
                                     placeholder="أي تعليمات خاصة للتوصيل..."
                                 ></textarea>
                             </div>
+                            <div className="form-group">
+                                <label className="form-label">كوبون خصم (اختياري)</label>
+                                <div className="coupon-input-wrap">
+                                    <MdDiscount />
+                                    <input
+                                        type="text"
+                                        className={`form-control ${errors.couponCode ? 'is-invalid' : ''}`}
+                                        value={couponCode}
+                                        onChange={(e) => setCouponCode(e.target.value)}
+                                        placeholder="مثال: GOLDEN10"
+                                        dir="ltr"
+                                    />
+                                </div>
+                                {errors.couponCode ? (
+                                    <small className="text-danger">{errors.couponCode}</small>
+                                ) : couponCode.trim() ? (
+                                    <small className="text-muted">
+                                        سيتم التحقق من الكوبون عند مراجعة الطلب.
+                                    </small>
+                                ) : null}
+                            </div>
                         </div>
                     </div>
 
@@ -277,7 +300,7 @@ const CheckoutPage = () => {
 
                             <div className="summary-items">
                                 {cartItems.map((item) => (
-                                    <div key={item.productId} className="summary-item">
+                                    <div key={item.cartKey || item.productId} className="summary-item">
                                         <div className="summary-item-img-wrapper">
                                             {item.image ? (
                                                 <img src={item.image} alt={item.productName} className="summary-item-img" />
@@ -292,6 +315,11 @@ const CheckoutPage = () => {
                                             <div className="summary-item-meta">
                                                 {item.quantity} x {formatCurrency(fromCents(item.price), currency)}
                                             </div>
+                                            {item.selectedColor && (
+                                                <div className="summary-item-color">
+                                                    اللون: {item.selectedColor.color}
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="summary-item-total fw-bold">
                                             {formatCurrency(fromCents(item.price * item.quantity), currency)}
@@ -305,6 +333,16 @@ const CheckoutPage = () => {
                                     <span>المجموع الفرعي</span>
                                     <span>{formatCurrency(fromCents(subtotal), currency)}</span>
                                 </div>
+                                <div className="summary-row">
+                                    <span>عدد المنتجات</span>
+                                    <span>{cartItems.reduce((sum, item) => sum + item.quantity, 0)}</span>
+                                </div>
+                                {couponCode.trim() && (
+                                    <div className="summary-row">
+                                        <span>الكوبون</span>
+                                        <span dir="ltr">{normalizeCouponCode(couponCode)}</span>
+                                    </div>
+                                )}
                                 <div className="summary-row">
                                     <span className="d-flex align-items-center gap-1">
                                         <MdLocalShipping /> رسوم التوصيل
